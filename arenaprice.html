@@ -1,0 +1,642 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maruti Price Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a237e; margin-bottom: 25px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; color: #333; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: border 0.3s; }
+        select:focus, input:focus { border-color: #1a237e; outline: none; }
+        
+        /* Capture Area Styling - We ensure this looks like a receipt */
+        .bill-area { margin-top: 25px; border-top: 2px solid #eee; padding: 20px; background: #fff; border-radius: 8px; }
+        
+        /* A header inside the bill area specifically for the screenshot */
+        .bill-header { text-align: center; margin-bottom: 15px; border-bottom: 2px dashed #eee; padding-bottom: 10px; display: none; }
+        .bill-header h3 { margin: 0; color: #1a237e; font-size: 1.2em; }
+        .bill-header p { margin: 5px 0 0; color: #666; font-size: 0.9em; }
+
+        /* --- ALIGNMENT FIXES START HERE --- */
+        .price-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; /* Ensures text and input/span are centered vertically */
+            padding: 8px 0; 
+            border-bottom: 1px solid #f9f9f9; 
+            font-size: 15px; 
+            color: #444; 
+        }
+        
+        /* This ensures the first element (the label/text) grows to push everything to the right */
+        .price-row > span:first-child, .price-row > label:first-child { 
+            flex-grow: 1; /* Allows the left side to take up available space */
+            text-align: left;
+            margin-right: 10px; /* Space between label and value/input */
+            display: inline-block;
+            margin-bottom: 0;
+        }
+
+        .price-row:last-child { border-bottom: none; }
+        
+        .total-row { font-weight: bold; font-size: 1.1em; color: #000; border-top: 2px solid #333; margin-top: 10px; padding-top: 15px; }
+        
+        .discount-section { margin-top: 20px; background: #fff3f3; padding: 15px; border-radius: 8px; border: 1px solid #ffcdd2; }
+        .discount-section label { color: #d32f2f; margin-bottom: 5px; }
+        .discount-section input { border-color: #ffcdd2; }
+        
+        .final-row { background: #e8f5e9; color: #2e7d32; font-size: 1.3em; padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .hidden { display: none !important; }
+        .currency { 
+            font-family: monospace; 
+            font-weight: 600; 
+            text-align: right; 
+            min-width: 120px; /* Give currency a fixed minimum width for better alignment */
+            line-height: 24px; /* Ensures vertical alignment with inputs/checkboxes */
+        }
+
+        /* --- STYLES FOR CHECKBOX & INLINE INPUTS --- */
+        
+        /* Make price inputs smaller and align right for in-row editing */
+        .price-row input[type="number"] {
+            width: 120px; 
+            /* Set fixed height and reset vertical padding for alignment */
+            padding: 0 4px 0 0; /* Only right padding for text clearance */
+            height: 24px; /* Matches the line-height of the .currency span */
+            text-align: right;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+            
+            /* Ensure fixed width and box model consistency */
+            width: 120px; 
+            box-sizing: content-box; 
+        }
+
+        /* NEW STYLES for Checkbox Alignment on Right */
+        .price-row.selectable-row .currency {
+            margin-right: 10px; /* Space between price and tick */
+        }
+
+        .checkbox-right-wrap {
+            /* Sets the size for the checkbox container */
+            width: 30px; 
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Push checkbox to the right edge of its container */
+        }
+
+        .checkbox-right-wrap input[type="checkbox"] {
+            /* Reset global input styles for a standard checkbox */
+            width: 16px !important; 
+            height: 16px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: 1px solid #ccc !important;
+            box-shadow: none !important;
+            box-sizing: border-box !important;
+            vertical-align: middle;
+        }
+
+        /* --- ALIGNMENT FIXES END HERE --- */
+
+
+        /* Button Styles */
+        .share-btn {
+            background-color: #1a237e;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        .share-btn:hover { background-color: #0d1450; }
+        .share-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainContainer">
+    <h2>Maruti Price Calculator</h2>
+
+    <div class="form-group">
+        <label>Select Model</label>
+        <select id="modelSelect" onchange="filterVariants()">
+            <option value="">-- Choose a Model --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Select Variant</label>
+        <select id="variantSelect" onchange="calculatePrice()" disabled>
+            <option value="">-- First Choose Model --</option>
+        </select>
+    </div>
+
+    <div id="billArea" class="bill-area hidden">
+        
+        <div class="bill-header" id="receiptHeader" style="display: block;">
+            <h3 id="rec_model">Model Name</h3>
+            <p id="rec_variant">Variant Name</p>
+        </div>
+
+        <div class="price-row"><span>Ex-Showroom</span> <span class="currency" id="p_ex">0</span></div>
+        <div class="price-row"><span>TCS Amount</span> <span class="currency" id="p_tcs">0</span></div>
+        
+        <div class="price-row" id="row_ins">
+            <span>Insurance</span>
+            <input type="number" id="input_ins" oninput="calculatePrice()" placeholder="0">
+        </div>
+        
+        <div class="price-row" id="row_rto">
+            <span>RTO + Reg</span>
+            <input type="number" id="input_rto" oninput="calculatePrice()" placeholder="0">
+        </div>
+
+        <div class="price-row" id="row_acc">
+            <span>Accessories</span>
+            <input type="number" id="input_acc" oninput="calculatePrice()" placeholder="0">
+        </div>
+
+        <div class="price-row selectable-row" id="row_ew">
+            <span>Ext. Warranty (6th Yr)</span>
+            <span class="currency" id="p_ew">0</span>
+            <label class="checkbox-right-wrap">
+                <input type="checkbox" id="check_ew" checked onchange="calculatePrice()">
+            </label>
+        </div>
+
+        <div class="price-row selectable-row" id="row_ccp">
+            <span>CCP (3yr Hydro)</span>
+            <span class="currency" id="p_ccp">0</span>
+            <label class="checkbox-right-wrap">
+                <input type="checkbox" id="check_ccp" checked onchange="calculatePrice()">
+            </label>
+        </div>
+
+        <div class="price-row selectable-row" id="row_tag">
+            <span>Fastag</span>
+            <span class="currency" id="p_tag">0</span>
+            <label class="checkbox-right-wrap">
+                <input type="checkbox" id="check_tag" checked onchange="calculatePrice()">
+            </label>
+        </div>
+        
+        <div class="price-row total-row">
+            <span>On Road Total</span> 
+            <span class="currency" id="p_total">0</span>
+        </div>
+
+        <div class="discount-section" data-html2canvas-ignore="true">
+            <label>Discount (if any)</label>
+            <input type="number" id="discountInput" placeholder="Enter amount (e.g. 5000)" oninput="calculatePrice()">
+        </div>
+
+        <div class="price-row hidden" id="rec_discount_row" style="color: #d32f2f;">
+            <span>Less: Discount</span>
+            <span class="currency" id="rec_discount_val">-0</span>
+        </div>
+
+        <div class="final-row">
+            <span>Final Price</span>
+            <span id="p_final">₹ 0</span>
+        </div>
+    </div>
+
+    <button id="shareBtn" class="share-btn hidden" onclick="shareScreenshot()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+        Share Quote Image
+    </button>
+</div>
+
+<script>
+    // --- DATA FROM PRICE.CSV (Unchanged) ---
+    const cars = [
+        {model: "ALTO K10", variant: "ALTO K10 STD 1L 5MT", ex: 369853, tcs: 0, ins: 15963, rto: 32358, acc: 15309, ew: 6112, ccp: 1923, tag: 600},
+        {model: "ALTO K10", variant: "ALTO K10 LXI 1L 5MT", ex: 399852, tcs: 0, ins: 16663, rto: 38757, acc: 15309, ew: 6608, ccp: 2077, tag: 600},
+        {model: "ALTO K10", variant: "ALTO K10 VXI 1L 5MT", ex: 449852, tcs: 0, ins: 17000, rto: 43257, acc: 15309, ew: 7434, ccp: 2336, tag: 600},
+        {model: "ALTO K10", variant: "ALTO K10 VXI+ 1L 5MT", ex: 499852, tcs: 0, ins: 17853, rto: 47757, acc: 15309, ew: 8260, ccp: 2596, tag: 600},
+        {model: "ALTO K10", variant: "ALTO K10 VXI 1L AGS", ex: 494853, tcs: 0, ins: 17763, rto: 47307, acc: 15309, ew: 8177, ccp: 2572, tag: 600},
+        {model: "ALTO K10", variant: "ALTO K10 VXI+ 1L AGS", ex: 544853, tcs: 0, ins: 18620, rto: 51807, acc: 15309, ew: 9003, ccp: 2832, tag: 600},
+        {model: "ALTO K10", variant: "ALTO K10 VXI CNG 1L 5MT", ex: 531853, tcs: 0, ins: 18854, rto: 50637, acc: 15309, ew: 8791, ccp: 2761, tag: 600},
+        {model: "ALTO K10", variant: "ALTO K10 LXI CNG 1L 5MT", ex: 481853, tcs: 0, ins: 17845, rto: 46137, acc: 15309, ew: 7965, ccp: 2502, tag: 600},
+        {model: "ALTO K10", variant: "TOUR H1 1L 5MT", ex: 399852, tcs: 0, ins: 18789, rto: 38757, acc: 15309, ew: 6608, ccp: 4154, tag: 600},
+        {model: "ALTO K10", variant: "TOUR H1 CNG 1L 5MT", ex: 481853, tcs: 0, ins: 19733, rto: 46137, acc: 15309, ew: 7965, ccp: 5003, tag: 600},
+        {model: "CELERIO", variant: "CELERIO LXI 1L ISS 5MT", ex: 469852, tcs: 0, ins: 17514, rto: 45057, acc: 15658, ew: 7765, ccp: 2442, tag: 600},
+        {model: "CELERIO", variant: "CELERIO VXI 1L ISS 5MT", ex: 515852, tcs: 0, ins: 18124, rto: 49197, acc: 15658, ew: 8527, ccp: 2679, tag: 600},
+        {model: "CELERIO", variant: "CELERIO ZXI 1L ISS 5MT", ex: 570852, tcs: 0, ins: 19063, rto: 54147, acc: 15658, ew: 9440, ccp: 2962, tag: 600},
+        {model: "CELERIO", variant: "CELERIO ZXI+ 1L ISS 5MT", ex: 627852, tcs: 0, ins: 20035, rto: 59277, acc: 15658, ew: 10384, ccp: 3257, tag: 600},
+        {model: "CELERIO", variant: "CELERIO VXI 1L ISS AGS", ex: 560853, tcs: 0, ins: 18893, rto: 53247, acc: 15658, ew: 9275, ccp: 2915, tag: 600},
+        {model: "CELERIO", variant: "CELERIO ZXI 1L ISS AGS", ex: 615853, tcs: 0, ins: 19830, rto: 58197, acc: 15658, ew: 10183, ccp: 3198, tag: 600},
+        {model: "CELERIO", variant: "CELERIO ZXI+ 1L ISS AGS", ex: 672853, tcs: 0, ins: 20800, rto: 63327, acc: 15658, ew: 11127, ccp: 3493, tag: 600},
+        {model: "CELERIO", variant: "CELERIO VXI CNG 1L 5MT", ex: 597853, tcs: 0, ins: 20009, rto: 56577, acc: 15658, ew: 9888, ccp: 3103, tag: 600},
+        {model: "S-PRESSO", variant: "S-PRESSO STD (O) 1L ISS 5MT", ex: 349853, tcs: 0, ins: 15308, rto: 30758, acc: 13339, ew: 5782, ccp: 1817, tag: 600},
+        {model: "S-PRESSO", variant: "S-PRESSO LXI (O) 1L ISS 5MT", ex: 379852, tcs: 0, ins: 15808, rto: 36957, acc: 13339, ew: 6278, ccp: 1971, tag: 600},
+        {model: "S-PRESSO", variant: "S-PRESSO VXI (O) 1L ISS 5MT", ex: 429852, tcs: 0, ins: 16660, rto: 41457, acc: 13339, ew: 7105, ccp: 2230, tag: 600},
+        {model: "S-PRESSO", variant: "S-PRESSO VXI+ (O) 1L ISS 5MT", ex: 479852, tcs: 0, ins: 17512, rto: 45957, acc: 13339, ew: 7931, ccp: 2490, tag: 600},
+        {model: "S-PRESSO", variant: "S-PRESSO VXI (O) 1L ISS AGS", ex: 474853, tcs: 0, ins: 17426, rto: 45507, acc: 13339, ew: 7847, ccp: 2466, tag: 600},
+        {model: "S-PRESSO", variant: "S-PRESSO VXI+ (O) 1L ISS AGS", ex: 524853, tcs: 0, ins: 18281, rto: 50007, acc: 13339, ew: 8673, ccp: 2726, tag: 600},
+        {model: "S-PRESSO", variant: "S-PRESSO LXI (O) CNG 1L 5MT", ex: 461853, tcs: 0, ins: 17632, rto: 44337, acc: 13339, ew: 7635, ccp: 2395, tag: 600},
+        {model: "S-PRESSO", variant: "S-PRESSO VXI (O) CNG 1L 5MT", ex: 511853, tcs: 0, ins: 18505, rto: 48837, acc: 13339, ew: 8461, ccp: 2655, tag: 600},
+        {model: "WAGONR", variant: "WAGON R LXI 1L ISS 5MT", ex: 498853, tcs: 0, ins: 17837, rto: 47667, acc: 16546, ew: 8248, ccp: 2596, tag: 600},
+        {model: "WAGONR", variant: "WAGON R VXI 1L ISS 5MT", ex: 551853, tcs: 0, ins: 18737, rto: 52437, acc: 16546, ew: 9122, ccp: 2867, tag: 600},
+        {model: "WAGONR", variant: "WAGON R ZXI 1.2L ISS 5MT", ex: 595852, tcs: 0, ins: 24615, rto: 56397, acc: 16546, ew: 9853, ccp: 3092, tag: 600},
+        {model: "WAGONR", variant: "WAGON R ZXI+ 1.2L ISS 5MT", ex: 638853, tcs: 0, ins: 25638, rto: 60267, acc: 16546, ew: 10738, ccp: 3375, tag: 600},
+        {model: "WAGONR", variant: "WAGON R ZXI+ 1.2L ISS 5MT-Dual Tone", ex: 649853, tcs: 0, ins: 25560, rto: 61257, acc: 16546, ew: 10738, ccp: 3375, tag: 600},
+        {model: "WAGONR", variant: "WAGON R VXI 1L ISS AGS", ex: 596853, tcs: 0, ins: 19507, rto: 56487, acc: 16546, ew: 9865, ccp: 3103, tag: 600},
+        {model: "WAGONR", variant: "WAGON R ZXI 1.2L ISS AGS", ex: 640853, tcs: 0, ins: 25404, rto: 60447, acc: 16546, ew: 10596, ccp: 3328, tag: 600},
+        {model: "WAGONR", variant: "WAGON R ZXI+ 1.2L ISS AGS", ex: 683852, tcs: 0, ins: 26157, rto: 64317, acc: 16546, ew: 11481, ccp: 3611, tag: 600},
+        {model: "WAGONR", variant: "WAGON R ZXI+ 1.2L ISS AGS-Dual Tone", ex: 694852, tcs: 0, ins: 26348, rto: 65307, acc: 16546, ew: 11481, ccp: 3611, tag: 600},
+        {model: "WAGONR", variant: "WAGON R LXI CNG 1L 5MT", ex: 588853, tcs: 0, ins: 19854, rto: 55767, acc: 16546, ew: 9735, ccp: 3056, tag: 600},
+        {model: "WAGONR", variant: "WAGON R VXI CNG 1L 5MT", ex: 641852, tcs: 0, ins: 20781, rto: 60537, acc: 16546, ew: 10608, ccp: 3328, tag: 600},
+        {model: "WAGONR", variant: "TOUR H3 1L ISS 5MT", ex: 498853, tcs: 0, ins: 22660, rto: 47667, acc: 16546, ew: 8246, ccp: 5180, tag: 600},
+        {model: "WAGONR", variant: "TOUR H3 CNG 1L 5MT", ex: 588853, tcs: 0, ins: 23460, rto: 55767, acc: 16546, ew: 9735, ccp: 6112, tag: 600},
+        {model: "SWIFT", variant: "SWIFT VXI 1.2L ISS AGS", ex: 703852, tcs: 0, ins: 28715, rto: 66117, acc: 20035, ew: 12886, ccp: 3658, tag: 600},
+        {model: "SWIFT", variant: "SWIFT VXI (O) 1.2L ISS AGS", ex: 729852, tcs: 0, ins: 29251, rto: 68457, acc: 20035, ew: 13358, ccp: 3788, tag: 600},
+        {model: "SWIFT", variant: "SWIFT ZXI 1.2L ISS AGS", ex: 797852, tcs: 0, ins: 30653, rto: 74577, acc: 20035, ew: 14597, ccp: 4142, tag: 600},
+        {model: "SWIFT", variant: "SWIFT ZXI+ 1.2L ISS AGS-Dual Tone", ex: 879853, tcs: 0, ins: 32346, rto: 81957, acc: 20035, ew: 16095, ccp: 4567, tag: 600},
+        {model: "SWIFT", variant: "SWIFT ZXI+ 1.2L ISS AGS", ex: 864853, tcs: 0, ins: 32032, rto: 80607, acc: 20035, ew: 16095, ccp: 4567, tag: 600},
+        {model: "SWIFT", variant: "SWIFT LXI 1.2L ISS 5MT", ex: 578853, tcs: 0, ins: 26137, rto: 54867, acc: 20035, ew: 10596, ccp: 3009, tag: 600},
+        {model: "SWIFT", variant: "SWIFT VXI 1.2L ISS 5MT", ex: 658853, tcs: 0, ins: 27787, rto: 62067, acc: 20035, ew: 12060, ccp: 3422, tag: 600},
+        {model: "SWIFT", variant: "SWIFT VXI (O) 1.2L ISS 5MT", ex: 684852, tcs: 0, ins: 28249, rto: 64407, acc: 20035, ew: 12532, ccp: 3552, tag: 600},
+        {model: "SWIFT", variant: "SWIFT ZXI 1.2L ISS 5MT", ex: 752853, tcs: 0, ins: 30051, rto: 70527, acc: 20035, ew: 13771, ccp: 3906, tag: 600},
+        {model: "SWIFT", variant: "SWIFT ZXI+ 1.2L ISS 5MT-Dual Tone", ex: 834852, tcs: 0, ins: 31416, rto: 77907, acc: 20035, ew: 15281, ccp: 4331, tag: 600},
+        {model: "SWIFT", variant: "SWIFT ZXI+ 1.2L ISS 5MT", ex: 819852, tcs: 0, ins: 31107, rto: 76557, acc: 20035, ew: 15281, ccp: 4331, tag: 600},
+        {model: "SWIFT", variant: "SWIFT VXI CNG 1.2L 5MT", ex: 744853, tcs: 0, ins: 30252, rto: 69807, acc: 20035, ew: 13629, ccp: 3870, tag: 600},
+        {model: "SWIFT", variant: "SWIFT VXI (O) CNG 1.2L 5MT", ex: 770853, tcs: 0, ins: 30806, rto: 72147, acc: 20035, ew: 14101, ccp: 4000, tag: 600},
+        {model: "SWIFT", variant: "SWIFT ZXI CNG 1.2L 5MT", ex: 838853, tcs: 0, ins: 32252, rto: 78267, acc: 20035, ew: 15352, ccp: 4354, tag: 600},
+        {model: "DZIRE", variant: "DZIRE VXI 1.2L ISS AGS", ex: 762052, tcs: 0, ins: 27524, rto: 71355, acc: 23314, ew: 13948, ccp: 3953, tag: 600},
+        {model: "DZIRE", variant: "DZIRE ZXI 1.2L ISS AGS", ex: 862652, tcs: 0, ins: 29283, rto: 80409, acc: 23314, ew: 15788, ccp: 4472, tag: 600},
+        {model: "DZIRE", variant: "DZIRE ZXI+ 1.2L ISS AGS", ex: 931253, tcs: 0, ins: 30482, rto: 86583, acc: 23314, ew: 17039, ccp: 4826, tag: 600},
+        {model: "DZIRE", variant: "DZIRE LXI 1.2L ISS 5MT", ex: 625553, tcs: 0, ins: 25134, rto: 59070, acc: 23314, ew: 11446, ccp: 3221, tag: 600},
+        {model: "DZIRE", variant: "DZIRE VXI 1.2L ISS 5MT", ex: 717053, tcs: 0, ins: 26735, rto: 67305, acc: 23314, ew: 13122, ccp: 3717, tag: 600},
+        {model: "DZIRE", variant: "DZIRE ZXI 1.2L ISS 5MT", ex: 817652, tcs: 0, ins: 28496, rto: 76359, acc: 23314, ew: 14962, ccp: 4236, tag: 600},
+        {model: "DZIRE", variant: "DZIRE ZXI+ 1.2L ISS 5MT", ex: 886252, tcs: 0, ins: 29693, rto: 82533, acc: 23314, ew: 16213, ccp: 4590, tag: 600},
+        {model: "DZIRE", variant: "DZIRE VXI CNG 1.2L 5MT", ex: 812553, tcs: 0, ins: 28268, rto: 75750, acc: 23314, ew: 14810, ccp: 4199, tag: 600},
+        {model: "DZIRE", variant: "DZIRE ZXI CNG 1.2L 5MT", ex: 913153, tcs: 0, ins: 30064, rto: 84804, acc: 23314, ew: 16650, ccp: 4719, tag: 600},
+        {model: "DZIRE", variant: "TOUR S 1.2L 5MT", ex: 636052, tcs: 0, ins: 27953, rto: 60021, acc: 23314, ew: 11634, ccp: 6114, tag: 600},
+        {model: "DZIRE", variant: "TOUR S CNG 1.2L 5MT", ex: 727552, tcs: 0, ins: 29553, rto: 68151, acc: 23314, ew: 13329, ccp: 7006, tag: 600},
+        {model: "BREZZA", variant: "BREZZA LXI 1.5L 5MT", ex: 834844, tcs: 0, ins: 31730, rto: 77526, acc: 21628, ew: 16186, ccp: 4331, tag: 600},
+        {model: "BREZZA", variant: "BREZZA VXI 1.5L 5MT", ex: 969843, tcs: 0, ins: 34160, rto: 90264, acc: 21628, ew: 18774, ccp: 5028, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI 1.5L 5MT", ex: 1104843, tcs: 11048, ins: 36569, rto: 124263, acc: 21628, ew: 21362, ccp: 5725, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI+ 1.5L 5MT", ex: 1248844, tcs: 12488, ins: 39397, rto: 139873, acc: 21628, ew: 24151, ccp: 6473, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI 1.5L 5MT-Dual Tone", ex: 1120843, tcs: 11208, ins: 36879, rto: 126023, acc: 21628, ew: 21362, ccp: 5725, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI+ 1.5L 5MT-Dual Tone", ex: 1264843, tcs: 12648, ins: 39712, rto: 141633, acc: 21628, ew: 24151, ccp: 6473, tag: 600},
+        {model: "BREZZA", variant: "BREZZA VXI 1.5L 6AT", ex: 1114843, tcs: 11148, ins: 36768, rto: 125363, acc: 21628, ew: 21550, ccp: 5772, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI 1.5L 6AT", ex: 1258844, tcs: 12588, ins: 39599, rto: 140973, acc: 21628, ew: 24339, ccp: 6520, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI+ 1.5L 6AT", ex: 1398843, tcs: 13988, ins: 42539, rto: 156683, acc: 21628, ew: 26992, ccp: 7234, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI 1.5L 6AT-Dual Tone", ex: 1274843, tcs: 12748, ins: 39910, rto: 142733, acc: 21628, ew: 24339, ccp: 6520, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI+ 1.5L 6AT-Dual Tone", ex: 1414844, tcs: 14148, ins: 42861, rto: 158443, acc: 21628, ew: 26992, ccp: 7234, tag: 600},
+        {model: "BREZZA", variant: "BREZZA LXI CNG 1.5L 5MT", ex: 924844, tcs: 0, ins: 33762, rto: 86036, acc: 21628, ew: 17906, ccp: 4792, tag: 600},
+        {model: "BREZZA", variant: "BREZZA VXI CNG 1.5L 5MT", ex: 1064843, tcs: 10648, ins: 36173, rto: 119933, acc: 21628, ew: 20583, ccp: 5518, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI CNG 1.5L 5MT", ex: 1204844, tcs: 12048, ins: 38580, rto: 135443, acc: 21628, ew: 23260, ccp: 6245, tag: 600},
+        {model: "BREZZA", variant: "BREZZA ZXI CNG 1.5L 5MT-Dual Tone", ex: 1220844, tcs: 12208, ins: 38891, rto: 137203, acc: 21628, ew: 23260, ccp: 6245, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA LXI 1.5L 5MT", ex: 869053, tcs: 0, ins: 32675, rto: 81048, acc: 29589, ew: 16869, ccp: 4522, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA VXI 1.5L 5MT", ex: 994052, tcs: 0, ins: 35140, rto: 92147, acc: 29589, ew: 19307, ccp: 5163, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA ZXI 1.5L 5MT", ex: 1094052, tcs: 10940, ins: 37476, rto: 123167, acc: 29589, ew: 21250, ccp: 5693, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA ZXI+ 1.5L 5MT", ex: 1162652, tcs: 11626, ins: 38947, rto: 130547, acc: 29589, ew: 22590, ccp: 6046, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA ZXI 1.5L 6AT", ex: 1214052, tcs: 12140, ins: 39955, rto: 135667, acc: 29589, ew: 23469, ccp: 6279, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA ZXI+ 1.5L 6AT", ex: 1282652, tcs: 12826, ins: 41426, rto: 143047, acc: 29589, ew: 24759, ccp: 6632, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA VXI CNG 1.5L 5MT", ex: 1084052, tcs: 10840, ins: 37372, rto: 122047, acc: 29589, ew: 21051, ccp: 6714, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA ZXI CNG 1.5L 5MT", ex: 1194052, tcs: 11940, ins: 39714, rto: 134547, acc: 29589, ew: 23289, ccp: 7421, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA TOUR M 1.5L 5MT", ex: 982344, tcs: 0, ins: 35301, rto: 91181, acc: 29589, ew: 19022, ccp: 10183, tag: 600},
+        {model: "ERTIGA", variant: "ERTIGA TOUR M CNG 1.5L 5MT", ex: 1082344, tcs: 10823, ins: 37332, rto: 121801, acc: 29589, ew: 20970, ccp: 11210, tag: 600},
+        {model: "EECO", variant: "EECO 5 STR STD 1.2L 5MT", ex: 532052, tcs: 0, ins: 25795, rto: 27000, acc: 13239, ew: 8792, ccp: 2761, tag: 600},
+        {model: "EECO", variant: "EECO 7 STR STD 1.2L 5MT", ex: 561053, tcs: 0, ins: 26395, rto: 27000, acc: 13239, ew: 9276, ccp: 2915, tag: 600},
+        {model: "EECO", variant: "EECO 5 STR AC 1.2L 5MT", ex: 568052, tcs: 0, ins: 26695, rto: 27000, acc: 13239, ew: 9406, ccp: 2953, tag: 600},
+        {model: "EECO", variant: "EECO 7 STR AC 1.2L 5MT", ex: 601053, tcs: 0, ins: 27395, rto: 27000, acc: 13239, ew: 9960, ccp: 3129, tag: 600},
+        {model: "EECO", variant: "EECO 5 STR AC CNG 1.2L 5MT", ex: 665053, tcs: 0, ins: 28495, rto: 27000, acc: 13239, ew: 11005, ccp: 3458, tag: 600},
+        {model: "EECO", variant: "EECO 5 STR STD CNG 1.2L 5MT", ex: 633053, tcs: 0, ins: 26895, rto: 27000, acc: 13239, ew: 10467, ccp: 6561, tag: 600},
+        {model: "EECO", variant: "TOUR V 5 STR AC 1.2L 5MT", ex: 551052, tcs: 0, ins: 26095, rto: 27000, acc: 13239, ew: 9110, ccp: 5711, tag: 600},
+        {model: "EECO", variant: "TOUR V 5 STR STD 1.2L 5MT", ex: 518052, tcs: 0, ins: 25395, rto: 27000, acc: 13239, ew: 8567, ccp: 5369, tag: 600},
+        {model: "EECO", variant: "TOUR V 6 STR STD 1.2L 5MT", ex: 545552, tcs: 0, ins: 26295, rto: 27000, acc: 13239, ew: 9015, ccp: 5664, tag: 600},
+        {model: "EECO", variant: "EECO CARGO AC CNG 1.2L 5MT", ex: 660452, tcs: 0, ins: 24984, rto: 27000, acc: 13239, ew: 10915, ccp: 3422, tag: 600},
+        {model: "EECO", variant: "EECO CARGO CNG 1.2L 5MT", ex: 620752, tcs: 0, ins: 24384, rto: 27000, acc: 13239, ew: 10266, ccp: 3221, tag: 600},
+        {model: "EECO", variant: "EECO CARGO STD 1.2L 5MT", ex: 542052, tcs: 0, ins: 25995, rto: 27000, acc: 13239, ew: 8945, ccp: 2810, tag: 600},
+        {model: "EECO", variant: "EECO CARGO AC 1.2L 5MT", ex: 576052, tcs: 0, ins: 26895, rto: 27000, acc: 13239, ew: 9536, ccp: 2997, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS LXI 1.5L 5MT", ex: 1128844, tcs: 11288, ins: 56250, rto: 127023, acc: 30200, ew: 21840, ccp: 5851, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS VXI 1.5L 5MT", ex: 1329843, tcs: 13298, ins: 60591, rto: 149023, acc: 30200, ew: 25732, ccp: 6895, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI 1.5L 5MT", ex: 1506843, tcs: 15068, ins: 66833, rto: 168523, acc: 30200, ew: 29461, ccp: 7881, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ 1.5L 5MT", ex: 1712843, tcs: 17128, ins: 74095, rto: 191243, acc: 30200, ew: 33457, ccp: 8961, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI(O) 1.5L 5MT", ex: 1557844, tcs: 15578, ins: 68632, rto: 174173, acc: 30200, ew: 30460, ccp: 8157, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) 1.5L 5MT", ex: 1770844, tcs: 17708, ins: 76139, rto: 197603, acc: 30200, ew: 34578, ccp: 9255, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS VXI 1.5L 6AT", ex: 1335844, tcs: 13358, ins: 60705, rto: 149713, acc: 30200, ew: 25854, ccp: 6927, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI 1.5L 6AT", ex: 1512844, tcs: 15128, ins: 66947, rto: 169183, acc: 30200, ew: 29583, ccp: 7918, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ 1.5L 6AT", ex: 1718843, tcs: 17188, ins: 74209, rto: 191843, acc: 30200, ew: 33571, ccp: 8992, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI(O) 1.5L 6AT", ex: 1563843, tcs: 15638, ins: 68746, rto: 174793, acc: 30200, ew: 30574, ccp: 8189, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) 1.5L 6AT", ex: 1776844, tcs: 17768, ins: 76253, rto: 198223, acc: 30200, ew: 34692, ccp: 9287, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS LXI CNG 1.5L 5MT", ex: 1149843, tcs: 11498, ins: 56778, rto: 129253, acc: 30200, ew: 22255, ccp: 5959, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS VXI CNG 1.5L 5MT", ex: 1350843, tcs: 13508, ins: 61121, rto: 151323, acc: 30200, ew: 26147, ccp: 7000, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI CNG 1.5L 5MT", ex: 1531844, tcs: 15318, ins: 67375, rto: 171223, acc: 30200, ew: 29959, ccp: 8016, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI CNG 1.5L 5MT-Dual Tone", ex: 1547843, tcs: 15478, ins: 67690, rto: 173003, acc: 30200, ew: 29959, ccp: 8016, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ 4WD 1.5L 5MT", ex: 1858844, tcs: 18588, ins: 79044, rto: 207453, acc: 30200, ew: 36154, ccp: 9678, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) 4WD 1.5L 5MT", ex: 1916844, tcs: 19168, ins: 81080, rto: 213833, acc: 30200, ew: 37275, ccp: 9973, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ 4WD 1.5L 5MT-Dual Tone", ex: 1874844, tcs: 18748, ins: 79370, rto: 209213, acc: 30200, ew: 36154, ccp: 9678, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) 4WD 1.5L 5MT-Dual Tone", ex: 1932843, tcs: 19328, ins: 81406, rto: 215593, acc: 30200, ew: 37275, ccp: 9973, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ STRONG HYBRID 1.5L ECVT", ex: 1827844, tcs: 18278, ins: 77800, rto: 203893, acc: 30200, ew: 35306, ccp: 9452, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) STRONG HYBRID 1.5L ECVT", ex: 1886844, tcs: 18868, ins: 80031, rto: 210383, acc: 30200, ew: 36451, ccp: 9759, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ 1.5L 6AT-Dual Tone", ex: 1734844, tcs: 17348, ins: 74535, rto: 193603, acc: 30200, ew: 33571, ccp: 8992, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) 1.5L 6AT-Dual Tone", ex: 1792844, tcs: 17928, ins: 76579, rto: 199983, acc: 30200, ew: 34692, ccp: 9287, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ 4WD 1.5L 6AT", ex: 1863244, tcs: 18632, ins: 79135, rto: 207937, acc: 30200, ew: 36248, ccp: 9706, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) 4WD 1.5L 6AT", ex: 1921243, tcs: 19212, ins: 81171, rto: 214317, acc: 30200, ew: 37369, ccp: 10001, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ 4WD 1.5L 6AT-Dual Tone", ex: 1879244, tcs: 18792, ins: 79734, rto: 209487, acc: 30200, ew: 36379, ccp: 9747, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) 4WD 1.5L 6AT-Dual Tone", ex: 1937243, tcs: 19372, ins: 81770, rto: 215867, acc: 30200, ew: 37500, ccp: 10042, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ STRONG HYBRID 1.5L ECVT-Dual Tone", ex: 1795244, tcs: 17952, ins: 78858, rto: 200247, acc: 30200, ew: 34751, ccp: 9310, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI(O) STRONG HYBRID 1.5L ECVT-Dual Tone", ex: 1854244, tcs: 18542, ins: 81031, rto: 206737, acc: 30200, ew: 35896, ccp: 9617, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+ STRONG HYBRID 1.5L ECVT-Dual Tone", ex: 1962244, tcs: 19622, ins: 85058, rto: 218617, acc: 30200, ew: 37984, ccp: 10172, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI+(O) STRONG HYBRID 1.5L ECVT-Dual Tone", ex: 1998843, tcs: 19988, ins: 86355, rto: 222643, acc: 30200, ew: 38692, ccp: 10360, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI CNG 1.5L 5MT-Dual Tone", ex: 1472244, tcs: 14722, ins: 68799, rto: 164717, acc: 30200, ew: 28497, ccp: 7635, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI(O) CNG 1.5L 5MT", ex: 1582844, tcs: 15828, ins: 70685, rto: 177453, acc: 30200, ew: 30889, ccp: 8276, tag: 600},
+        {model: "VICTORIS", variant: "VICTORIS ZXI(O) CNG 1.5L 5MT-Dual Tone", ex: 1598843, tcs: 15988, ins: 71000, rto: 179233, acc: 30200, ew: 30889, ccp: 8276, tag: 600},
+    ]; 
+    const modelSelect = document.getElementById("modelSelect"); 
+    const variantSelect = document.getElementById("variantSelect"); 
+    const billArea = document.getElementById("billArea"); 
+    const shareBtn = document.getElementById("shareBtn"); 
+
+    const formatINR = (amt) => new Intl.NumberFormat('en-IN', { 
+        style: 'currency', 
+        currency: 'INR', 
+        minimumFractionDigits: 0 
+    }).format(amt); 
+
+    const models = [...new Set(cars.map(c => c.model))]; 
+    models.forEach(m => modelSelect.innerHTML += `<option value="${m}">${m}</option>`); 
+
+    function filterVariants() { 
+        const selectedModel = modelSelect.value; 
+        variantSelect.innerHTML = '<option value="">-- Choose a Variant --</option>'; 
+        variantSelect.disabled = !selectedModel; 
+        billArea.classList.add("hidden"); 
+        shareBtn.classList.add("hidden"); 
+
+        // Reset all editable fields when model/variant selection is reset
+        document.getElementById("input_ins").value = "";
+        document.getElementById("input_rto").value = "";
+        document.getElementById("input_acc").value = "";
+        document.getElementById("discountInput").value = "";
+
+        // Reset checkboxes for optional items to checked on selection change
+        document.getElementById("check_ew").checked = true;
+        document.getElementById("check_ccp").checked = true;
+        document.getElementById("check_tag").checked = true;
+
+
+        if (selectedModel) { 
+            cars.filter(c => c.model === selectedModel) 
+            .forEach(c => variantSelect.innerHTML += `<option value="${c.variant}">${c.variant}</option>`); 
+        } 
+    } 
+
+    function calculatePrice() { 
+        const variantName = variantSelect.value; 
+        if (!variantName) return; 
+        const car = cars.find(c => c.variant === variantName); 
+
+        billArea.classList.remove("hidden"); 
+        shareBtn.classList.remove("hidden"); 
+
+        // Set Text for Header (Used in Screenshot) 
+        document.getElementById("rec_model").innerText = car.model;
+        document.getElementById("rec_variant").innerText = car.variant; 
+
+        // Fixed/Mandatory prices
+        document.getElementById("p_ex").innerText = formatINR(car.ex); 
+        document.getElementById("p_tcs").innerText = formatINR(car.tcs); 
+
+        // Get editable inputs
+        const insInput = document.getElementById("input_ins");
+        const rtoInput = document.getElementById("input_rto");
+        const accInput = document.getElementById("input_acc");
+
+        // --- FIXED LOGIC START ---
+        // If the calculation is triggered by selecting a new variant, 
+        // ALWAYS update the editable fields with the new variant's default prices.
+        const isVariantChange = document.activeElement.id === 'variantSelect';
+        
+        if (isVariantChange) {
+            insInput.value = car.ins;
+            rtoInput.value = car.rto;
+            accInput.value = car.acc;
+        }
+
+        // 1. Determine base amounts (use manual input or fallback to 0 if input is cleared)
+        const insAmount = Number(insInput.value) || 0;
+        const rtoAmount = Number(rtoInput.value) || 0;
+        const accAmount = Number(accInput.value) || 0;
+        // --- FIXED LOGIC END ---
+
+
+        // 2. Set the displayed fixed amounts (EW, CCP, Tag)
+        document.getElementById("p_ew").innerText = formatINR(car.ew);
+        document.getElementById("p_ccp").innerText = formatINR(car.ccp);
+        document.getElementById("p_tag").innerText = formatINR(car.tag);
+
+        // 3. Get checkbox statuses for optional items
+        const isEwChecked = document.getElementById("check_ew").checked;
+        const isCcpChecked = document.getElementById("check_ccp").checked;
+        const isTagChecked = document.getElementById("check_tag").checked;
+
+        // 4. Calculate included amounts for optional items (0 if unchecked)
+        const ewAmount = isEwChecked ? car.ew : 0;
+        const ccpAmount = isCcpChecked ? car.ccp : 0;
+        const tagAmount = isTagChecked ? car.tag : 0;
+
+        // 5. Calculate On Road Total
+        const total = car.ex + car.tcs + insAmount + rtoAmount + accAmount + ewAmount + ccpAmount + tagAmount;
+        document.getElementById("p_total").innerText = formatINR(total); 
+
+        // 6. Handle Discount Logic for Display and Screenshot 
+        const discountInput = document.getElementById("discountInput"); 
+        const discountVal = Number(discountInput.value) || 0; 
+        const discountRow = document.getElementById("rec_discount_row"); 
+
+        if (discountVal > 0) { 
+            discountRow.classList.remove("hidden"); 
+            document.getElementById("rec_discount_val").innerText = "-" + formatINR(discountVal); 
+        } else { 
+            discountRow.classList.add("hidden"); 
+        } 
+
+        document.getElementById("p_final").innerText = formatINR(total - discountVal); 
+    }
+
+    // --- NEW SHARE BUTTON LOGIC (FIXED) ---
+    function shareScreenshot() { 
+        const button = document.getElementById("shareBtn");
+        const originalText = button.innerHTML;
+        button.innerHTML = 'Generating...';
+        button.disabled = true;
+
+        // 1. Get current values and inputs/rows
+        const insRow = document.getElementById('row_ins');
+        const rtoRow = document.getElementById('row_rto');
+        const accRow = document.getElementById('row_acc');
+
+        const insInput = document.getElementById("input_ins");
+        const rtoInput = document.getElementById("input_rto");
+        const accInput = document.getElementById("input_acc");
+
+        const insVal = insInput.value;
+        const rtoVal = rtoInput.value;
+        const accVal = accInput.value;
+        
+        // Storage for the temporary span elements
+        let tempInsSpan, tempRtoSpan, tempAccSpan;
+
+        // Function to replace input with span (for clean screenshot)
+        const setupScreenshot = () => {
+            tempInsSpan = document.createElement('span');
+            tempInsSpan.classList.add('currency');
+            tempInsSpan.innerText = formatINR(Number(insVal));
+            insInput.replaceWith(tempInsSpan);
+
+            tempRtoSpan = document.createElement('span');
+            tempRtoSpan.classList.add('currency');
+            tempRtoSpan.innerText = formatINR(Number(rtoVal));
+            rtoInput.replaceWith(tempRtoSpan);
+
+            tempAccSpan = document.createElement('span');
+            tempAccSpan.classList.add('currency');
+            tempAccSpan.innerText = formatINR(Number(accVal));
+            accInput.replaceWith(tempAccSpan);
+
+            document.querySelector('.discount-section').setAttribute('data-html2canvas-ignore', 'false');
+        };
+
+        // Function to revert span back to input (CRITICAL for functionality)
+        const revertChanges = () => {
+            if (tempInsSpan && tempInsSpan.parentNode === insRow) tempInsSpan.replaceWith(insInput);
+            if (tempRtoSpan && tempRtoSpan.parentNode === rtoRow) tempRtoSpan.replaceWith(rtoInput);
+            if (tempAccSpan && tempAccSpan.parentNode === accRow) tempAccSpan.replaceWith(accInput);
+            
+            document.querySelector('.discount-section').setAttribute('data-html2canvas-ignore', 'true');
+            
+            button.innerHTML = originalText;
+            button.disabled = false;
+        };
+        
+        // Helper function for the image download fallback
+        const downloadImage = (canvas) => {
+             const link = document.createElement('a');
+             link.download = 'maruti-quote.png';
+             link.href = canvas.toDataURL('image/png'); // Get DataURL from canvas
+             link.click();
+             alert("Quote image download initiated! (Clipboard copy failed)");
+        };
+        
+        setupScreenshot(); // Replace inputs with spans
+
+        // Capture the element using a robust try...finally block
+        html2canvas(document.getElementById('billArea'), {
+            scale: 2, 
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff', 
+            scrollY: -window.scrollY 
+        }).then(canvas => {
+            try {
+                // Attempt to copy the image to the clipboard (preferred method)
+                canvas.toBlob(blob => {
+                    if (navigator.clipboard && navigator.clipboard.write) {
+                        const item = new ClipboardItem({'image/png': blob});
+                        navigator.clipboard.write([item])
+                            .then(() => alert("Quote image copied to clipboard!"))
+                            .catch(err => {
+                                console.warn('Failed to copy image to clipboard: ', err);
+                                // FIX: If clipboard copy fails, fall back to image download
+                                downloadImage(canvas);
+                            });
+                    } else {
+                        // If clipboard API not available, fall back to image download
+                        downloadImage(canvas);
+                    }
+                }, 'image/png');
+            } catch (error) {
+                console.error("Error during blob creation/clipboard attempt:", error);
+                // FINAL FALLBACK: Text copy
+                navigator.clipboard.writeText(generateFullTextQuote());
+                alert("Could not generate image. Full text quote copied to clipboard instead!");
+            }
+        }).catch(err => {
+             console.error("HTML2Canvas Error:", err);
+             // Final fallback if canvas creation failed completely
+             navigator.clipboard.writeText(generateFullTextQuote());
+             alert("An error occurred while generating the image. Full text quote copied to clipboard instead!");
+        }).finally(() => {
+            // CRITICAL: Restore the original inputs
+            revertChanges(); 
+        });
+    }
+
+    // --- FALLBACK TEXT GENERATOR (Minor Cleanup) --- 
+    function generateFullTextQuote() { 
+        const model = document.getElementById("rec_model").innerText; 
+        const variant = document.getElementById("rec_variant").innerText; 
+        
+        // Get values (already formatted)
+        const ex = document.getElementById("p_ex").innerText; 
+        const tcs = document.getElementById("p_tcs").innerText; 
+        const total = document.getElementById("p_total").innerText; 
+        const final = document.getElementById("p_final").innerText; 
+        const discountVal = Number(document.getElementById("discountInput").value) || 0; 
+        
+        // Get current values from editable inputs
+        const insFormatted = formatINR(Number(document.getElementById("input_ins").value) || 0);
+        const rtoFormatted = formatINR(Number(document.getElementById("input_rto").value) || 0);
+        const accFormatted = formatINR(Number(document.getElementById("input_acc").value) || 0);
+
+        // Optional fixed fields (with tick selection)
+        const isEwChecked = document.getElementById("check_ew").checked;
+        const isCcpChecked = document.getElementById("check_ccp").checked;
+        const isTagChecked = document.getElementById("check_tag").checked;
+        const ew = document.getElementById("p_ew").innerText; 
+        const ccp = document.getElementById("p_ccp").innerText; 
+        const tag = document.getElementById("p_tag").innerText; 
+
+        let text = `--- Maruti Price Quote ---\\n`; 
+        text += `Model: ${model}\\n`; 
+        text += `Variant: ${variant}\\n`; 
+        text += `---------------------------\\n`; 
+        text += `Ex-Showroom: ${ex}\\n`; 
+        text += `TCS: ${tcs}\\n`; 
+
+        // Editable fields
+        text += `Insurance: ${insFormatted}\\n`; 
+        text += `RTO + Reg: ${rtoFormatted}\\n`; 
+        text += `Accessories: ${accFormatted}\\n`; 
+
+        // Optional fixed fields
+        text += `Ext. Warranty: ${ew} ${isEwChecked ? '[✓]' : '[ ]'}\\n`; 
+        text += `CCP (Hydro): ${ccp} ${isCcpChecked ? '[✓]' : '[ ]'}\\n`; 
+        text += `Fastag: ${tag} ${isTagChecked ? '[✓]' : '[ ]'}\\n`; 
+        
+        text += `---------------------------\\n`; 
+        text += `On Road Total: ${total}\\n`; 
+
+        if(discountVal > 0) text += `Discount: -${formatINR(discountVal)}\\n`; 
+        text += `*Final Price*: ${final}`;
+
+        return text;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital Drive</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background:#0a0a0a;
+      color:#fff;
+      font-family:'Segoe UI',sans-serif;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:60px 20px 40px;
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    /* Half Sun Rays */
+    .sun-rays {
+      position:absolute;
+      top:-80px;
+      left:50%;
+      transform:translateX(-50%);
+      width:320px;
+      height:200px;
+      background:radial-gradient(circle at center, #ffd70033 0%, transparent 70%);
+      opacity:0.6;
+      pointer-events:none;
+      z-index:1;
+    }
+    .sun-rays::before {
+      content:'';
+      position:absolute;
+      top:80px;
+      left:50%;
+      transform:translateX(-50%);
+      width:6px;
+      height:130px;
+      background:linear-gradient(to bottom,#ffaa00,transparent);
+      box-shadow:
+        35px -25px 0 -2px #ffaa0044,
+        -35px -25px 0 -2px #ffaa0044,
+        70px -50px 0 -3px #ffaa0033,
+        -70px -50px 0 -3px #ffaa0033,
+        105px -75px 0 -4px #ffaa0022,
+        -105px -75px 0 -4px #ffaa0022;
+    }
+
+    .header {
+      text-align:center;
+      margin-bottom:60px;
+      z-index:2;
+      position:relative;
+    }
+
+    h1 {
+      font-family:'Playfair Display',serif;
+      font-size:3.3rem;
+      font-weight:700;
+      background:linear-gradient(90deg,#00ff88,#00ccff,#aa00ff);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      letter-spacing:8px;
+      text-shadow:0 0 30px rgba(0,255,136,0.4);
+    }
+
+    .subtitle {
+      font-family:'Dancing Script',cursive;
+      font-size:1.7rem;
+      color:#ffdd00;
+      margin-top:10px;
+      text-shadow:0 0 15px rgba(255,221,0,0.6);
+    }
+
+    .button-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      max-width:380px;
+      width:100%;
+      z-index:2;
+    }
+
+    .btn {
+      padding:18px 12px;
+      font-size:1rem;
+      font-weight:600;
+      text-align:center;
+      border:none;
+      border-radius:16px;
+      text-transform:uppercase;
+      letter-spacing:1.2px;
+      color:#fff;
+      box-shadow:0 6px 20px rgba(0,0,0,0.6);
+      transition:all 0.3s ease;
+    }
+
+    /* NEW Arena Buttons – Fiery Red-Orange Gradient */
+    .btn-arena {
+      background: linear-gradient(135deg, #ff3e3e, #ff6b00);
+      background: linear-gradient(135deg, #ff2d55, #ff6b35, #ff8c00);
+    }
+
+    /* Nexa Buttons – Cool Teal-Green (unchanged) */
+    .btn-nexa {
+      background: linear-gradient(135deg, #00d4aa, #00b894);
+    }
+
+    .btn:hover {
+      transform:translateY(-6px);
+      box-shadow:0 12px 30px rgba(0,0,0,0.8);
+    }
+
+    .btn:active {
+      transform:translateY(-2px);
+    }
+
+    @media (max-width:480px) {
+      h1 { font-size:2.8rem; letter-spacing:6px; }
+      .subtitle { font-size:1.5rem; }
+      .sun-rays { width:280px; top:-60px; }
+      .btn { padding:16px 8px; font-size:0.95rem; }
+      .button-grid { gap:16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sun-rays"></div>
+
+  <div class="header">
+    <h1>Digital Drive</h1>
+    <p class="subtitle">instant & easier</p>
+  </div>
+
+  <div class="button-grid">
+    <a href="arenaprice" class="btn btn-arena">Arena Price</a>
+    <a href="nexaprice" class="btn btn-nexa">Nexa Price</a>
+
+    <a href="a.jpg" class="btn btn-arena">Arena CSD</a>
+    <a href="image3.jpg" class="btn btn-nexa">Nexa CSD</a>
+
+    <a href="arenaofferdec.JPG" class="btn btn-arena">Arena Offer</a>
+    <a href="nexaofferdec" class="btn btn-nexa">Nexa Offer</a>
+  </div>
+<footer style="
+    margin-top: 80px;
+    padding: 20px;
+    text-align: center;
+    font-size: 1rem;
+    color: #aaa;
+    letter-spacing: 1.5px;
+">
+  ® Praveen © 2025. All rights reserved.
+</footer>
+</body>
+</html>

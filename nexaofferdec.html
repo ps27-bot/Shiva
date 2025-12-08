@@ -1,0 +1,476 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>December '25 Offer Summary (Mobile View - Fixed)</title>
+    <style>
+        /* Base styles for mobile-first design */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            font-size: 1.5em;
+            margin: 15px 0 20px 0;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 8px;
+        }
+
+        /* Card and Accordion Styles */
+        .model-card {
+            background: #ffffff;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border-left: 5px solid #4285f4;
+        }
+        .card-header {
+            padding: 15px;
+            background-color: #ffffff;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .card-header::after {
+            content: '▼';
+            font-size: 0.8em;
+            color: #4285f4;
+            transition: transform 0.3s;
+        }
+        .model-card.active .card-header::after {
+            transform: rotate(180deg);
+        }
+        .total-offer {
+            font-weight: 500;
+            color: #28a745;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .card-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+        .model-card.active .card-content {
+            padding-bottom: 15px;
+        }
+
+        /* Offer list styles - ADJUSTED FOR SPACE */
+        .offer-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e0e0e0;
+            font-size: 0.9em;
+        }
+        .offer-item:last-child {
+            border-bottom: none;
+        }
+        .offer-label {
+            font-weight: normal;
+            color: #666;
+            text-align: left;
+            flex-basis: 45%; /* Slightly reduced label width */
+        }
+        .offer-value {
+            font-weight: bold;
+            color: #1a73e8;
+            text-align: right;
+            flex-basis: 55%; /* Increased value width */
+            padding-left: 10px;
+            word-break: break-word; /* Ensures long text wraps */
+        }
+        .offer-max {
+            background-color: #e6ffed;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        .offer-max .offer-value {
+            color: #28a745;
+        }
+        
+        /* Note Styling */
+        .note {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3e0;
+            border: 1px solid #ffcc80;
+            color: #e65100;
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>DECEMBER 2025 VEHICLE OFFER SUMMARY</h1>
+
+        <div id="offer-list">
+            <div class="model-card">
+                <div class="card-header" data-model="Ciaz">
+                    Ciaz (All Variants)
+                    <span class="total-offer">Max: ₹ 1,25,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 1,00,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 25,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 30,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 1,25,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Fronx 1.2L MT">
+                    Fronx 1.2L MT Petrol
+                    <span class="total-offer">Max: ₹ 30,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 10,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 5,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 30,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Fronx 1.2L AGS">
+                    Fronx 1.2L AGS Petrol
+                    <span class="total-offer">Max: ₹ 35,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 20,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 10,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 5,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 35,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Fronx CNG">
+                    Fronx CNG
+                    <span class="total-offer">Max: ₹ 25,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 10,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 10,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 5,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 25,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Fronx Turbo">
+                    Fronx Turbo
+                    <span class="total-offer">Max: ₹ 40,000 + Kit</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 25,000 + Velocity Kit worth ₹ 43,000 or ₹ 55,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 10,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 5,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 40,000 + Velocity Kit worth ₹ 43,000 or ₹ 70,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Ignis Sigma">
+                    Ignis Sigma MT Petrol
+                    <span class="total-offer">Max: ₹ 67,500</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 50,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 30,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 2,500</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 2,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 67,500</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Ignis MT">
+                    Ignis Delta/Zeta/Alpha MT Petrol
+                    <span class="total-offer">Max: ₹ 47,500</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 30,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 30,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 2,500</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 2,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 47,500</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Ignis AGS">
+                    Ignis AGS
+                    <span class="total-offer">Max: ₹ 52,500</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 35,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 30,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 2,500</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 2,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 52,500</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Baleno MT">
+                    New Baleno MT Petrol
+                    <span class="total-offer">Max: ₹ 45,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 25,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 25,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 5,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 2,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 45,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Baleno AGS">
+                    New Baleno AGS Petrol
+                    <span class="total-offer">Max: ₹ 50,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 30,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 25,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 5,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 2,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 50,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Baleno CNG">
+                    New Baleno CNG
+                    <span class="total-offer">Max: ₹ 45,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 25,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 25,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 5,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 2,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 45,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Grand Vitara Sigma">
+                    Grand Vitara Sigma
+                    <span class="total-offer">Max: ₹ 1,15,000 + Bonus</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 70,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 30,000 + Upgrade Bonus worth ₹ 35,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 35,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 4,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 1,15,000 + Upgrade Bonus worth ₹ 35,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Grand Vitara Delta">
+                    Grand Vitara Delta (MT/AT - Petrol)
+                    <span class="total-offer">Max: ₹ 1,15,000 + Bonus</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 70,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 30,000 + Upgrade Bonus worth ₹ 35,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 45,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 4,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 1,15,000 + Upgrade Bonus worth ₹ 35,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Grand Vitara Zeta/Alpha">
+                    Grand Vitara Zeta/Alpha (MT/AT)
+                    <span class="total-offer">Max: ₹ 1,05,000 + EW + Bonus</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 60,000 + Extended Warranty (EW)</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 30,000 + Upgrade Bonus worth ₹ 30,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 45,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 4,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 1,05,000 + EW + Upgrade Bonus worth ₹ 30,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Grand Vitara 4WD/All Grip">
+                    Grand Vitara (4WD/ALL GRIP)
+                    <span class="total-offer">Max: ₹ 1,20,000 + EW + Bonus</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 75,000 + Extended Warranty (EW)</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 30,000 + Upgrade Bonus worth ₹ 30,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 45,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 4,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 1,20,000 + EW + Upgrade Bonus worth ₹ 30,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Grand Vitara eCVT">
+                    Grand Vitara eCVT (Hybrid)
+                    <span class="total-offer">Max: ₹ 1,40,000 + EW + Bonus</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 75,000 + Extended Warranty (EW)</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 50,000 + Upgrade Bonus worth ₹ 50,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 65,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 4,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 1,40,000 + EW + Upgrade Bonus worth ₹ 50,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Grand Vitara CNG">
+                    Grand Vitara CNG
+                    <span class="total-offer">Max: ₹ 80,000 + Bonus</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 45,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 20,000 + Upgrade Bonus worth ₹ 20,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 35,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 4,100</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 80,000 + Upgrade Bonus worth ₹ 20,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Jimny">
+                    Jimny Alpha and Zeta
+                    <span class="total-offer">Max: ₹ 1,05,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 1,00,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 5,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 1,05,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="XL6">
+                    XL6 Petrol and CNG
+                    <span class="total-offer">Max: ₹ 55,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 25,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 20,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 25,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 10,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 55,000</span></div>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="card-header" data-model="Invicto">
+                    Invicto (All variants)
+                    <span class="total-offer">Max: ₹ 2,10,000</span>
+                </div>
+                <div class="card-content">
+                    <div class="offer-item"><span class="offer-label">Consumer Offer</span><span class="offer-value">₹ 1,00,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Exchange Bonus (***)</span><span class="offer-value">₹ 1,00,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Scrappage</span><span class="offer-value">₹ 1,15,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Corporate Offer</span><span class="offer-value">₹ 10,000</span></div>
+                    <div class="offer-item"><span class="offer-label">Rural Offer</span><span class="offer-value">₹ 0</span></div>
+                    <div class="offer-item offer-max"><span class="offer-label">Total Maximum Offers</span><span class="offer-value">₹ 2,10,000</span></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="note">
+            <p>(***) **Exchange Bonus**: This may include an additional "**Upgrade Bonus**" for certain Grand Vitara variants, as specified in the table.</p>
+            <p><strong>Note:</strong> **EW** stands for **Extended Warranty**. All amounts are subject to the terms and conditions of the offer valid until **December 31, 2025**.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const headers = document.querySelectorAll('.card-header');
+
+            headers.forEach(header => {
+                header.addEventListener('click', function () {
+                    const card = this.closest('.model-card');
+                    const content = card.querySelector('.card-content');
+                    
+                    // Toggle the active class
+                    const isActive = card.classList.contains('active');
+
+                    // First, close all other cards
+                    document.querySelectorAll('.model-card.active').forEach(otherCard => {
+                        if (otherCard !== card) {
+                            otherCard.classList.remove('active');
+                            otherCard.querySelector('.card-content').style.maxHeight = "0";
+                        }
+                    });
+
+                    // Then, toggle the clicked card
+                    if (isActive) {
+                        // Collapse the card
+                        card.classList.remove('active');
+                        content.style.maxHeight = "0";
+                    } else {
+                        // Expand the card
+                        card.classList.add('active');
+                        // Set max-height to scrollHeight to show all content + a small buffer for smooth animation
+                        content.style.maxHeight = (content.scrollHeight + 5) + "px";
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

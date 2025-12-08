@@ -1,0 +1,1812 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexa Price Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a237e; margin-bottom: 25px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; color: #333; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: border 0.3s; }
+        select:focus, input:focus { border-color: #1a237e; outline: none; }
+        
+        /* Capture Area Styling - We ensure this looks like a receipt */
+        .bill-area { margin-top: 25px; border-top: 2px solid #eee; padding: 20px; background: #fff; border-radius: 8px; }
+        
+        /* A header inside the bill area specifically for the screenshot */
+        .bill-header { text-align: center; margin-bottom: 15px; border-bottom: 2px dashed #eee; padding-bottom: 10px; display: block; }
+        .bill-header h3 { margin: 0; color: #1a237e; font-size: 1.2em; }
+        .bill-header p { margin: 5px 0 0; color: #666; font-size: 0.9em; }
+
+        /* --- ALIGNMENT FIXES START HERE --- */
+        .price-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0; 
+            border-bottom: 1px solid #f9f9f9; 
+            font-size: 15px; 
+            color: #444; 
+        }
+        
+        .price-row > span:first-child, .price-row > label:first-child { 
+            flex-grow: 1; 
+            text-align: left;
+            margin-right: 10px; 
+            display: inline-block;
+            margin-bottom: 0;
+        }
+
+        .price-row:last-child { border-bottom: none; }
+        
+        .total-row { font-weight: bold; font-size: 1.1em; color: #000; border-top: 2px solid #333; margin-top: 10px; padding-top: 15px; }
+        
+        .discount-section { margin-top: 20px; background: #fff3f3; padding: 15px; border-radius: 8px; border: 1px solid #ffcdd2; }
+        .discount-section label { color: #d32f2f; margin-bottom: 5px; }
+        .discount-section input { border-color: #ffcdd2; }
+        
+        .final-row { background: #e8f5e9; color: #2e7d32; font-size: 1.3em; padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .hidden { display: none !important; }
+        .currency { 
+            font-family: monospace; 
+            font-weight: 600; 
+            text-align: right; 
+            min-width: 120px; 
+            line-height: 24px; 
+        }
+
+        /* --- STYLES FOR CHECKBOX & INLINE INPUTS --- */
+        .price-row input[type="number"] {
+            width: 120px; 
+            padding: 0 4px 0 0; 
+            height: 24px; 
+            text-align: right;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+            width: 120px; 
+            box-sizing: content-box; 
+        }
+
+        .price-row.selectable-row .currency {
+            margin-right: 10px; 
+        }
+
+        .checkbox-right-wrap {
+            width: 30px; 
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; 
+        }
+
+        .checkbox-right-wrap input[type="checkbox"] {
+            width: 16px !important; 
+            height: 16px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: 1px solid #ccc !important;
+            box-shadow: none !important;
+            box-sizing: border-box !important;
+            vertical-align: middle;
+        }
+
+        /* --- ALIGNMENT FIXES END HERE --- */
+        .share-btn {
+            background-color: #1a237e;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        .share-btn:hover { background-color: #0d1450; }
+        .share-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainContainer">
+    <h2>Nexa Price Calculator</h2>
+
+    <div class="form-group">
+        <label>Select Model</label>
+        <select id="modelSelect" onchange="filterVariants()">
+            <option value="">-- Choose a Model --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Select Variant</label>
+        <select id="variantSelect" onchange="calculatePrice()" disabled>
+            <option value="">-- First Choose Model --</option>
+        </select>
+    </div>
+
+    <div id="billArea" class="bill-area hidden">
+        
+        <div class="bill-header" id="receiptHeader">
+            <h3 id="rec_model">Model Name</h3>
+            <p id="rec_variant">Variant Name</p>
+        </div>
+
+        <div class="price-row"><span>Ex-Showroom</span> <span class="currency" id="p_ex">0</span></div>
+        <div class="price-row"><span>TCS Amount</span> <span class="currency" id="p_tcs">0</span></div>
+        
+        <div class="price-row" id="row_ins">
+            <span>Insurance</span>
+            <input type="number" id="input_ins" oninput="calculatePrice()" placeholder="0">
+        </div>
+        
+        <div class="price-row" id="row_rto">
+            <span>RTO + Reg</span>
+            <input type="number" id="input_rto" oninput="calculatePrice()" placeholder="0">
+        </div>
+
+        <div class="price-row" id="row_acc">
+            <span>Accessories</span>
+            <input type="number" id="input_acc" oninput="calculatePrice()" placeholder="0">
+        </div>
+
+        <div class="price-row selectable-row" id="row_ew">
+            <span>Ext. Warranty (6th Yr)</span>
+            <span class="currency" id="p_ew">0</span>
+            <label class="checkbox-right-wrap">
+                <input type="checkbox" id="check_ew" checked onchange="calculatePrice()">
+            </label>
+        </div>
+
+        <div class="price-row selectable-row" id="row_ccp">
+            <span>CCP (3yr Hydro)</span>
+            <span class="currency" id="p_ccp">0</span>
+            <label class="checkbox-right-wrap">
+                <input type="checkbox" id="check_ccp" checked onchange="calculatePrice()">
+            </label>
+        </div>
+
+        <div class="price-row selectable-row" id="row_tag">
+            <span>Fastag</span>
+            <span class="currency" id="p_tag">0</span>
+            <label class="checkbox-right-wrap">
+                <input type="checkbox" id="check_tag" checked onchange="calculatePrice()">
+            </label>
+        </div>
+        
+        <div class="price-row total-row">
+            <span>On Road Total</span> 
+            <span class="currency" id="p_total">0</span>
+        </div>
+
+        <div class="discount-section" data-html2canvas-ignore="true">
+            <label>Discount (if any)</label>
+            <input type="number" id="discountInput" placeholder="Enter amount (e.g. 5000)" oninput="calculatePrice()">
+        </div>
+
+        <div class="price-row hidden" id="rec_discount_row" style="color: #d32f2f;">
+            <span>Less: Discount</span>
+            <span class="currency" id="rec_discount_val">-0</span>
+        </div>
+
+        <div class="final-row">
+            <span>Final Price</span>
+            <span id="p_final">₹ 0</span>
+        </div>
+    </div>
+
+    <button id="shareBtn" class="share-btn hidden" onclick="shareScreenshot()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+        Share Quote Image
+    </button>
+</div>
+
+<script>
+    // --- DATA FROM NEXA PRICE.csv (Programmatically generated for accuracy) ---
+    // The keys (ex, tcs, ins, rto, acc, ew, ccp, tag) are mapped to the CSV columns for direct compatibility with the existing logic.
+    const cars = [
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "New Baleno Alpha AGS-BZA4KZ200",
+        "code": "BZA4KZ200",
+        "ex": 906152.0,
+        "tcs": 0.0,
+        "ew": 16791.0,
+        "ccp": 6289.0,
+        "ins": 37984.0,
+        "rto": 84493.68,
+        "acc": 18925.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "New Baleno Zeta AGS-BZA4KZ100",
+        "code": "BZA4KZ100",
+        "ex": 816153.0,
+        "tcs": 0.0,
+        "ew": 16414.0,
+        "ccp": 5664.0,
+        "ins": 35997.0,
+        "rto": 76393.77,
+        "acc": 18941.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "New Baleno Delta AGS -BZA4KV100",
+        "code": "BZA4KV100",
+        "ex": 726153.0,
+        "tcs": 0.0,
+        "ew": 14715.0,
+        "ccp": 5039.0,
+        "ins": 34055.0,
+        "rto": 68293.77,
+        "acc": 18953.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "New Baleno Alpha -BZR4KZ200",
+        "code": "BZR4KZ200",
+        "ex": 856152.0,
+        "tcs": 0.0,
+        "ew": 17157.0,
+        "ccp": 5947.0,
+        "ins": 36907.0,
+        "rto": 79993.68,
+        "acc": 18925.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "New Baleno Zeta -BZR4KZ100",
+        "code": "BZR4KZ100",
+        "ex": 766152.0,
+        "tcs": 0.0,
+        "ew": 14018.0,
+        "ccp": 5298.0,
+        "ins": 34920.0,
+        "rto": 71893.68,
+        "acc": 18941.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "New Baleno Delta -BZR4KV100",
+        "code": "BZR4KV100",
+        "ex": 676153.0,
+        "tcs": 0.0,
+        "ew": 12378.0,
+        "ccp": 4673.0,
+        "ins": 32951.0,
+        "rto": 63793.77,
+        "acc": 18953.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "New Baleno Sigma-BZR4KL100",
+        "code": "BZR4KL100",
+        "ex": 595152.0,
+        "tcs": 0.0,
+        "ew": 12260.0,
+        "ccp": 4142.0,
+        "ins": 31178.0,
+        "rto": 56503.68,
+        "acc": 18953.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "BALENO DELTA CNG 1.2L 5MT-BZRCKV100",
+        "code": "BZRCKV100",
+        "ex": 766152.0,
+        "tcs": 0.0,
+        "ew": 15446.0,
+        "ccp": 5322.0,
+        "ins": 35790.0,
+        "rto": 71893.68,
+        "acc": 18952.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO OLD CODE",
+        "variant": "BALENO ZETA CNG 1.2L 5MT-BZRCKZ100",
+        "code": "BZRCKZ100",
+        "ex": 856152.0,
+        "tcs": 0.0,
+        "ew": 17145.0,
+        "ccp": 5947.0,
+        "ins": 37759.0,
+        "rto": 79993.68,
+        "acc": 18941.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "New Baleno Alpha AGS-BZA4LZ200",
+        "code": "BZA4LZ200",
+        "ex": 909852.0,
+        "tcs": 0.0,
+        "ew": 16650.0,
+        "ccp": 6289.0,
+        "ins": 38062.0,
+        "rto": 84826.68,
+        "acc": 18925.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "New Baleno Zeta AGS-BZA4LZ100",
+        "code": "BZA4LZ100",
+        "ex": 819852.0,
+        "tcs": 0.0,
+        "ew": 14998.0,
+        "ccp": 5664.0,
+        "ins": 36075.0,
+        "rto": 76726.68,
+        "acc": 18941.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "New Baleno Delta AGS -BZA4LV100",
+        "code": "BZA4LV100",
+        "ex": 729852.0,
+        "tcs": 0.0,
+        "ew": 13358.0,
+        "ccp": 5039.0,
+        "ins": 34134.0,
+        "rto": 68626.68,
+        "acc": 18953.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "New Baleno Alpha -BZR4LZ200",
+        "code": "BZR4LZ200",
+        "ex": 859853.0,
+        "tcs": 0.0,
+        "ew": 15729.0,
+        "ccp": 5947.0,
+        "ins": 36985.0,
+        "rto": 80326.77,
+        "acc": 18925.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "New Baleno Zeta -BZR4LZ100",
+        "code": "BZR4LZ100",
+        "ex": 769852.0,
+        "tcs": 0.0,
+        "ew": 14089.0,
+        "ccp": 5322.0,
+        "ins": 34998.0,
+        "rto": 72226.68,
+        "acc": 18941.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "New Baleno Delta -BZR4LV100",
+        "code": "BZR4LV100",
+        "ex": 679852.0,
+        "tcs": 0.0,
+        "ew": 12437.0,
+        "ccp": 4696.0,
+        "ins": 33029.0,
+        "rto": 64126.68,
+        "acc": 18953.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "New Baleno Sigma-BZR4LL100",
+        "code": "BZR4LL100",
+        "ex": 598852.0,
+        "tcs": 0.0,
+        "ew": 10962.0,
+        "ccp": 4142.0,
+        "ins": 31256.0,
+        "rto": 56836.68,
+        "acc": 18953.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "BALENO DELTA CNG 1.2L 5MT-BZRCLV100",
+        "code": "BZRCLV100",
+        "ex": 769852.0,
+        "tcs": 0.0,
+        "ew": 14089.0,
+        "ccp": 5322.0,
+        "ins": 35868.0,
+        "rto": 72226.68,
+        "acc": 18952.0,
+        "tag": 600.0
+    },
+    {
+        "model": "BALENO NEW CODE",
+        "variant": "BALENO ZETA CNG 1.2L 5MT-BZRCLZ100",
+        "code": "BZRCLZ100",
+        "ex": 859853.0,
+        "tcs": 0.0,
+        "ew": 15729.0,
+        "ccp": 5947.0,
+        "ins": 37837.0,
+        "rto": 80326.77,
+        "acc": 18941.0,
+        "tag": 600.0
+    },
+    {
+        "model": "JIMNY",
+        "variant": "Alpha ALLGRIP PRO 1.5L 4AT ISS (DUAL TONE)-JMA4EZ200",
+        "code": "JMA4EZ200",
+        "ex": 1444544.0,
+        "tcs": 14445.0,
+        "ew": 28416.0,
+        "ccp": 10433.0,
+        "ins": 49819.0,
+        "rto": 161839.84,
+        "acc": 19764.0,
+        "tag": 600.0
+    },
+    {
+        "model": "JIMNY",
+        "variant": "Alpha ALLGRIP PRO 1.5L 4AT ISS-JMA4EZ200",
+        "code": "JMA4EZ200",
+        "ex": 1429143.0,
+        "tcs": 14291.0,
+        "ew": 27966.0,
+        "ccp": 9983.0,
+        "ins": 49494.0,
+        "rto": 160145.73,
+        "acc": 19764.0,
+        "tag": 600.0
+    },
+    {
+        "model": "JIMNY",
+        "variant": "Zeta ALLGRIP PRO 1.5L 4AT ISS-JMA4EZ100",
+        "code": "JMA4EZ100",
+        "ex": 1337444.0,
+        "tcs": 13374.0,
+        "ew": 25889.0,
+        "ccp": 9239.0,
+        "ins": 47561.0,
+        "rto": 150058.84,
+        "acc": 19764.0,
+        "tag": 600.0
+    },
+    {
+        "model": "JIMNY",
+        "variant": "Alpha ALLGRIP PRO 1.5L 5MT ISS (DUAL TONE)-JMR4EZ200",
+        "code": "JMR4EZ200",
+        "ex": 1338544.0,
+        "tcs": 13385.0,
+        "ew": 26363.0,
+        "ccp": 9701.0,
+        "ins": 47583.0,
+        "rto": 150179.84,
+        "acc": 19764.0,
+        "tag": 600.0
+    },
+    {
+        "model": "JIMNY",
+        "variant": "Alpha ALLGRIP PRO 1.5L 5MT ISS-JMR4FZ200",
+        "code": "JMR4FZ200",
+        "ex": 1323144.0,
+        "tcs": 13231.0,
+        "ew": 25913.0,
+        "ccp": 9251.0,
+        "ins": 47258.0,
+        "rto": 148485.84,
+        "acc": 19764.0,
+        "tag": 600.0
+    },
+    {
+        "model": "JIMNY",
+        "variant": "Zeta ALLGRIP PRO 1.5L 5MT ISS-JMR4FZ100",
+        "code": "JMR4FZ100",
+        "ex": 1231444.0,
+        "tcs": 12314.0,
+        "ew": 23836.0,
+        "ccp": 8508.0,
+        "ins": 45325.0,
+        "rto": 138398.84,
+        "acc": 19764.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Alpha 1.2L MT-IGR4FZ200",
+        "code": "IGR4FZ200",
+        "ex": 696952.0,
+        "tcs": 0.0,
+        "ew": 12992.0,
+        "ccp": 4909.0,
+        "ins": 32257.0,
+        "rto": 65665.68,
+        "acc": 18968.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Alpha 1.2L MT (DUAL TONE)-IGR4FZ200",
+        "code": "IGR4FZ200",
+        "ex": 709652.0,
+        "tcs": 0.0,
+        "ew": 13051.0,
+        "ccp": 4944.0,
+        "ins": 26003.0,
+        "rto": 66808.68,
+        "acc": 18968.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Zeta 1.2L MT-IGR4FZ100",
+        "code": "IGR4FZ100",
+        "ex": 637152.0,
+        "tcs": 0.0,
+        "ew": 11894.0,
+        "ccp": 4496.0,
+        "ins": 30908.0,
+        "rto": 60283.68,
+        "acc": 18947.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Zeta 1.2L MT (DUAL TONE)-IGR4FZ100",
+        "code": "IGR4FZ100",
+        "ex": 650153.0,
+        "tcs": 0.0,
+        "ew": 11953.0,
+        "ccp": 4531.0,
+        "ins": 25204.0,
+        "rto": 61453.77,
+        "acc": 18947.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Delta 1.2 L MT-IGR4FV100",
+        "code": "IGR4FV100",
+        "ex": 584453.0,
+        "tcs": 0.0,
+        "ew": 10691.0,
+        "ccp": 4036.0,
+        "ins": 29732.0,
+        "rto": 55540.77,
+        "acc": 18947.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Sigma 1.2L MT-IGR4FL100",
+        "code": "IGR4FL100",
+        "ex": 535052.0,
+        "tcs": 0.0,
+        "ew": 9794.0,
+        "ccp": 3705.0,
+        "ins": 28613.0,
+        "rto": 51094.68,
+        "acc": 18961.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Alpha 1.2L (AGS)-IGA4FZ200",
+        "code": "IGA4FZ200",
+        "ex": 741952.0,
+        "tcs": 0.0,
+        "ew": 13806.0,
+        "ccp": 5216.0,
+        "ins": 33274.0,
+        "rto": 69715.68,
+        "acc": 18968.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Alpha 1.2L (AGS)-(DUAL TONE)-IGA4FZ200",
+        "code": "IGA4FZ200",
+        "ex": 754952.0,
+        "tcs": 0.0,
+        "ew": 13865.0,
+        "ccp": 5251.0,
+        "ins": 26604.0,
+        "rto": 70885.68,
+        "acc": 18968.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Zeta 1.2L (AGS)-IGA4FZ100",
+        "code": "IGA4FZ100",
+        "ex": 682453.0,
+        "tcs": 0.0,
+        "ew": 12720.0,
+        "ccp": 4803.0,
+        "ins": 31928.0,
+        "rto": 64360.77,
+        "acc": 18947.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Zeta 1.2L (AGS)-(DUAL TONE)-IGA4FZ100",
+        "code": "IGA4FZ100",
+        "ex": 695152.0,
+        "tcs": 0.0,
+        "ew": 12779.0,
+        "ccp": 4838.0,
+        "ins": 25801.0,
+        "rto": 65503.68,
+        "acc": 18947.0,
+        "tag": 600.0
+    },
+    {
+        "model": "IGNIS",
+        "variant": "Ignis Delta 1.2L (AGS)-IGA4FV100",
+        "code": "IGA4FV100",
+        "ex": 629452.0,
+        "tcs": 0.0,
+        "ew": 11517.0,
+        "ccp": 4354.0,
+        "ins": 30750.0,
+        "rto": 59590.68,
+        "acc": 18975.0,
+        "tag": 600.0
+    },
+    {
+        "model": "CIAZ",
+        "variant": "Ciaz Alpha 1.5 L MT-CIR4IZ200",
+        "code": "CIR4IZ200",
+        "ex": 1097643.0,
+        "tcs": 10976.0,
+        "ew": 21252.0,
+        "ccp": 7587.0,
+        "ins": 38862.0,
+        "rto": 123680.73,
+        "acc": 19906.0,
+        "tag": 600.0
+    },
+    {
+        "model": "CIAZ",
+        "variant": "Ciaz Zeta 1.5 L MT-CIR4IZ100",
+        "code": "CIR4IZ100",
+        "ex": 1005444.0,
+        "tcs": 10054.0,
+        "ew": 19470.0,
+        "ccp": 6950.0,
+        "ins": 36996.0,
+        "rto": 113538.84,
+        "acc": 20102.0,
+        "tag": 600.0
+    },
+    {
+        "model": "CIAZ",
+        "variant": "Ciaz Delta 1.5 L MT-CIR4HV100",
+        "code": "CIR4HV100",
+        "ex": 964943.0,
+        "tcs": 0.0,
+        "ew": 18679.0,
+        "ccp": 6667.0,
+        "ins": 36116.0,
+        "rto": 89784.87,
+        "acc": 20102.0,
+        "tag": 600.0
+    },
+    {
+        "model": "CIAZ",
+        "variant": "Ciaz Sigma 1.5 L MT-CIR4HL100",
+        "code": "CIR4HL100",
+        "ex": 908943.0,
+        "tcs": 0.0,
+        "ew": 17594.0,
+        "ccp": 6136.0,
+        "ins": 34883.0,
+        "rto": 84744.87,
+        "acc": 20102.0,
+        "tag": 600.0
+    },
+    {
+        "model": "CIAZ",
+        "variant": "Ciaz Alpha 1.5 L (AT)-CIA4IZ200",
+        "code": "CIA4IZ200",
+        "ex": 1203944.0,
+        "tcs": 12039.0,
+        "ew": 23305.0,
+        "ccp": 8319.0,
+        "ins": 39710.0,
+        "rto": 135373.84,
+        "acc": 19906.0,
+        "tag": 600.0
+    },
+    {
+        "model": "CIAZ",
+        "variant": "Ciaz Zeta 1.5 L (AT)-CIA4IZ100",
+        "code": "CIA4IZ100",
+        "ex": 1111643.0,
+        "tcs": 11116.0,
+        "ew": 21523.0,
+        "ccp": 7682.0,
+        "ins": 39332.0,
+        "rto": 125220.73,
+        "acc": 20102.0,
+        "tag": 600.0
+    },
+    {
+        "model": "CIAZ",
+        "variant": "Ciaz Delta 1.5 L AT-CIA4HV100",
+        "code": "CIA4HV100",
+        "ex": 1072544.0,
+        "tcs": 10725.0,
+        "ew": 20768.0,
+        "ccp": 7410.0,
+        "ins": 38481.0,
+        "rto": 120919.84,
+        "acc": 20102.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ALPHA+ 1.5L CVT (DUAL TONE)-GVAHHZ200",
+        "code": "GVAHHZ200",
+        "ex": 1965543.64,
+        "tcs": 19655.0,
+        "ew": 39341.0,
+        "ccp": 18070.0,
+        "ins": 58329.0,
+        "rto": 219149.80,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ALPHA+ 1.5L CVT-GVAHHZ200",
+        "code": "GVAHHZ200",
+        "ex": 1950144.0,
+        "tcs": 19501.0,
+        "ew": 38043.0,
+        "ccp": 13570.0,
+        "ins": 58010.0,
+        "rto": 217455.84,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ALPHA+(O) 1.5L CVT (DUAL TONE)-GVAHHZB00",
+        "code": "GVAHHZB00",
+        "ex": 1972343.63,
+        "tcs": 19723.0,
+        "ew": 40380.0,
+        "ccp": 14067.0,
+        "ins": 58916.0,
+        "rto": 219897.80,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ALPHA+(O) 1.5L CVT-GVAHHZB00",
+        "code": "GVAHHZB00",
+        "ex": 1956944.0,
+        "tcs": 19569.0,
+        "ew": 38173.0,
+        "ccp": 13617.0,
+        "ins": 58596.0,
+        "rto": 218203.84,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ZETA+(O) 1.5L CVT (DUAL TONE)-GVAHHZA00",
+        "code": "GVAHHZA00",
+        "ex": 1865643.64,
+        "tcs": 18656.0,
+        "ew": 37831.0,
+        "ccp": 13336.0,
+        "ins": 56523.0,
+        "rto": 208160.80,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ZETA+(O) 1.5L CVT-GVAHHZA00",
+        "code": "GVAHHZA00",
+        "ex": 1850244.0,
+        "tcs": 18502.0,
+        "ew": 36108.0,
+        "ccp": 12886.0,
+        "ins": 56203.0,
+        "rto": 206466.84,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ZETA+ 1.5L CVT (DUAL TONE)-GVAHHZ100",
+        "code": "GVAHHZ100",
+        "ex": 1806943.64,
+        "tcs": 18069.0,
+        "ew": 36663.0,
+        "ccp": 12934.0,
+        "ins": 55313.0,
+        "rto": 201703.80,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ZETA+ 1.5L CVT-GVAHHZ100",
+        "code": "GVAHHZ100",
+        "ex": 1791544.0,
+        "tcs": 17915.0,
+        "ew": 34975.0,
+        "ccp": 12484.0,
+        "ins": 54993.0,
+        "rto": 200009.84,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ALPHA(O) 1.5L 6AT (DUAL TONE)-GVA4HZB00",
+        "code": "GVA4HZB00",
+        "ex": 1727943.64,
+        "tcs": 17279.0,
+        "ew": 35778.0,
+        "ccp": 12380.0,
+        "ins": 53976.0,
+        "rto": 193013.80,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ALPHA(O) 1.5L 6AT-GVA4HZB00",
+        "code": "GVA4HZB00",
+        "ex": 1712544.0,
+        "tcs": 17125.0,
+        "ew": 33441.0,
+        "ccp": 11930.0,
+        "ins": 53657.0,
+        "rto": 191319.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ALPHA(O) 1.5L 5MT (DUAL TONE)-GVR4HZB00",
+        "code": "GVR4HZB00",
+        "ex": 1592943.63,
+        "tcs": 15929.0,
+        "ew": 33064.0,
+        "ccp": 11448.0,
+        "ins": 51176.0,
+        "rto": 178163.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ALPHA(O) 1.5L 5MT-GVR4HZB00",
+        "code": "GVR4HZB00",
+        "ex": 1577544.0,
+        "tcs": 15775.0,
+        "ew": 30833.0,
+        "ccp": 10998.0,
+        "ins": 50856.0,
+        "rto": 176469.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ALPHA 1.5L 5MT (DUAL TONE)-GVR4HZ200",
+        "code": "GVR4HZ200",
+        "ex": 1535043.64,
+        "tcs": 15350.0,
+        "ew": 31907.0,
+        "ccp": 11058.0,
+        "ins": 49975.0,
+        "rto": 171794.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ALPHA 1.5L 5MT-GVR4HZ200",
+        "code": "GVR4HZ200",
+        "ex": 1519644.0,
+        "tcs": 15196.0,
+        "ew": 29712.0,
+        "ccp": 10608.0,
+        "ins": 49656.0,
+        "rto": 170100.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ZETA(O) 1.5L 6AT (DUAL TONE)-GVA4HZA00",
+        "code": "GVA4HZA00",
+        "ex": 1578343.63,
+        "tcs": 15783.0,
+        "ew": 33052.0,
+        "ccp": 11353.0,
+        "ins": 50942.0,
+        "rto": 176557.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ZETA(O) 1.5L 6AT-GVA4HZA00",
+        "code": "GVA4HZA00",
+        "ex": 1562944.0,
+        "tcs": 15629.0,
+        "ew": 30550.0,
+        "ccp": 10903.0,
+        "ins": 50622.0,
+        "rto": 174863.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ZETA(O) 1.5L 5MT (DUAL TONE)-GVR4HZA00",
+        "code": "GVR4HZA00",
+        "ex": 1443343.64,
+        "tcs": 14433.0,
+        "ew": 30279.0,
+        "ccp": 9971.0,
+        "ins": 48142.0,
+        "rto": 161707.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ZETA(O) 1.5L 5MT-GVR4HZA00",
+        "code": "GVR4HZA00",
+        "ex": 1427944.0,
+        "tcs": 14279.0,
+        "ew": 27942.0,
+        "ccp": 10421.0,
+        "ins": 47822.0,
+        "rto": 160013.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ZETA 1.5L 5MT-GVR4HZ100",
+        "code": "GVR4HZ100",
+        "ex": 1369944.0,
+        "tcs": 13699.0,
+        "ew": 26821.0,
+        "ccp": 9570.0,
+        "ins": 46620.0,
+        "rto": 153633.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ZETA 1.5L 5MT (DUAL TONE)-GVR4HZ100",
+        "code": "GVR4HZ100",
+        "ex": 1385343.64,
+        "tcs": 13853.0,
+        "ew": 33359.0,
+        "ccp": 10020.0,
+        "ins": 46940.0,
+        "rto": 155327.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  DELTA+ 1.5L CVT-GVAHHV100",
+        "code": "GVAHHV100",
+        "ex": 1663243.64,
+        "tcs": 16632.0,
+        "ew": 32190.0,
+        "ccp": 11493.0,
+        "ins": 52097.0,
+        "rto": 185896.80,
+        "acc": 20107.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  DELTA 1.5L 5MT-GVR4HV100",
+        "code": "GVR4HV100",
+        "ex": 1209643.64,
+        "tcs": 12096.0,
+        "ew": 23411.0,
+        "ccp": 8354.0,
+        "ins": 42894.0,
+        "rto": 136000.80,
+        "acc": 20102.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  SIGMA 1.5L 5MT-GVR4HL100",
+        "code": "GVR4HL100",
+        "ex": 1076443.63,
+        "tcs": 10764.0,
+        "ew": 20839.0,
+        "ccp": 7434.0,
+        "ins": 40359.0,
+        "rto": 121348.80,
+        "acc": 20102.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ALPHA 1.5L 6AT (DUAL TONE)-GVA4HZ200",
+        "code": "GVA4HZ200",
+        "ex": 1670043.63,
+        "tcs": 16700.0,
+        "ew": 34727.0,
+        "ccp": 11990.0,
+        "ins": 52776.0,
+        "rto": 186644.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ALPHA 1.5L 6AT-GVA4HZ200",
+        "code": "GVA4HZ200",
+        "ex": 1654644.0,
+        "tcs": 16546.0,
+        "ew": 32320.0,
+        "ccp": 11540.0,
+        "ins": 52456.0,
+        "rto": 184950.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ZETA 1.5L 6AT-GVA4HZ100",
+        "code": "GVA4HZ100",
+        "ex": 1504944.0,
+        "tcs": 15049.0,
+        "ew": 29429.0,
+        "ccp": 10502.0,
+        "ins": 49420.0,
+        "rto": 168483.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ZETA 1.5L 6AT (DUAL TONE)-GVA4HZ100",
+        "code": "GVA4HZ100",
+        "ex": 1520343.64,
+        "tcs": 15203.0,
+        "ew": 27317.0,
+        "ccp": 10952.0,
+        "ins": 49740.0,
+        "rto": 170177.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  DELTA 1.5L 6AT-GVA4HV100",
+        "code": "GVA4HV100",
+        "ex": 1344643.64,
+        "tcs": 13446.0,
+        "ew": 26031.0,
+        "ccp": 9287.0,
+        "ins": 45694.0,
+        "rto": 150850.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ALPHA4WD 1.5L 6AT (DUAL TONE)-GVA4HZV00",
+        "code": "GVA4HZV00",
+        "ex": 1815043.64,
+        "tcs": 18150.0,
+        "ew": 37748.0,
+        "ccp": 12982.0,
+        "ins": 55780.0,
+        "rto": 202594.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ALPHA4WD 1.5L 6AT-GVA4HZV00",
+        "code": "GVA4HZV00",
+        "ex": 1799644.0,
+        "tcs": 17996.0,
+        "ew": 35129.0,
+        "ccp": 12532.0,
+        "ins": 55460.0,
+        "rto": 200900.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ALPHA 4WD 1.5L 5AT (O)-GVA4HZW00",
+        "code": "GVA4HZW00",
+        "ex": 1857544.0,
+        "tcs": 18575.0,
+        "ew": 36250.0,
+        "ccp": 12933.0,
+        "ins": 56661.0,
+        "rto": 207269.84,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": " GRAND VITARA  ALPHA 4WD 1.5L 5AT(O) (DUAL TONE)-GVA4HZW00",
+        "code": "GVA4HZW00",
+        "ex": 1872943.63,
+        "tcs": 18729.0,
+        "ew": 38916.0,
+        "ccp": 13383.0,
+        "ins": 56981.0,
+        "rto": 208963.80,
+        "acc": 20057.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA DELTA CNG 1.5L 5MT-GVRCHV100",
+        "code": "GVRCHV100",
+        "ex": 1299643.63,
+        "tcs": 12996.0,
+        "ew": 25158.0,
+        "ccp": 8980.0,
+        "ins": 44774.0,
+        "rto": 145900.80,
+        "acc": 20061.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ZETA CNG 1.5L 5MT (DUAL TONE)-GVRCHZ100",
+        "code": "GVRCHZ100",
+        "ex": 1475343.63,
+        "tcs": 14753.0,
+        "ew": 30538.0,
+        "ccp": 10645.0,
+        "ins": 48821.0,
+        "rto": 165227.80,
+        "acc": 20061.0,
+        "tag": 600.0
+    },
+    {
+        "model": "GV",
+        "variant": "GRAND VITARA ZETA CNG 1.5L 5MT-GVRCHZ100",
+        "code": "GVRCHZ100",
+        "ex": 1459944.0,
+        "tcs": 14599.0,
+        "ew": 28556.0,
+        "ccp": 10195.0,
+        "ins": 48501.0,
+        "rto": 163533.84,
+        "acc": 20061.0,
+        "tag": 600.0
+    },
+    {
+        "model": "OLD CODE XL6",
+        "variant": "XL6  ALPHA+ 1.5L 5MT (DUAL TONE)-XLR4EZB00",
+        "code": "XLR4EZB00",
+        "ex": 1312444.0,
+        "tcs": 13124.0,
+        "ew": 27326.0,
+        "ccp": 8720.0,
+        "ins": 44984.0,
+        "rto": 147308.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "OLD CODE XL6",
+        "variant": " XL6  ALPHA+ 1.5L 5MT-XLR4EZB00",
+        "code": "XLR4EZB00",
+        "ex": 1297044.0,
+        "tcs": 12970.0,
+        "ew": 25489.0,
+        "ccp": 8270.0,
+        "ins": 44664.0,
+        "rto": 145614.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "OLD CODE XL6",
+        "variant": "XL6 ALPHA 1.5L 5MT-XLR4EZ200",
+        "code": "XLR4EZ200",
+        "ex": 1247043.63,
+        "tcs": 12470.0,
+        "ew": 24869.0,
+        "ccp": 8031.0,
+        "ins": 43647.0,
+        "rto": 139983.79,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "OLD CODE XL6",
+        "variant": "XL6 ZETA 1.5L 5MT-XLR4EZ100",
+        "code": "XLR4EZ100",
+        "ex": 1161044.0,
+        "tcs": 11610.0,
+        "ew": 22442.0,
+        "ccp": 7241.0,
+        "ins": 41818.0,
+        "rto": 130396.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "OLD CODE XL6",
+        "variant": "XL6 ALPHA+ 1.5L 6AT (DUAL TONE)-XLA4EZB00",
+        "code": "XLA4EZB00",
+        "ex": 1466444.0,
+        "tcs": 14664.0,
+        "ew": 30370.0,
+        "ccp": 9701.0,
+        "ins": 47254.0,
+        "rto": 164287.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "OLD CODE XL6",
+        "variant": " XL6  ALPHA+ 1.5L 6AT-XLA4EZB00",
+        "code": "XLA4EZB00",
+        "ex": 1451043.63,
+        "tcs": 14510.0,
+        "ew": 28547.0,
+        "ccp": 9251.0,
+        "ins": 46934.0,
+        "rto": 162593.79,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "OLD CODE XL6",
+        "variant": "XL6 ALPHA 1.5L 6AT-XLA4EZ200",
+        "code": "XLA4EZ200",
+        "ex": 1399044.0,
+        "tcs": 13990.0,
+        "ew": 27367.0,
+        "ccp": 8831.0,
+        "ins": 45831.0,
+        "rto": 156943.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "OLD CODE XL6",
+        "variant": "XL6 ZETA 1.5L 6AT-XLA4EZ100",
+        "code": "XLA4EZ100",
+        "ex": 1307044.0,
+        "tcs": 13070.0,
+        "ew": 25167.0,
+        "ccp": 8041.0,
+        "ins": 43902.0,
+        "rto": 146816.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "NEW CODE XL6",
+        "variant": "XL6  ALPHA+ 1.5L 5MT (DUAL TONE)-XLR4FZB00",
+        "code": "XLR4FZB00",
+        "ex": 1317044.0,
+        "tcs": 13170.0,
+        "ew": 27326.0,
+        "ccp": 8720.0,
+        "ins": 45075.0,
+        "rto": 147814.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "NEW CODE XL6",
+        "variant": " XL6  ALPHA+ 1.5L 5MT-XLR4FZB00",
+        "code": "XLR4FZB00",
+        "ex": 1301644.0,
+        "tcs": 13016.0,
+        "ew": 25489.0,
+        "ccp": 8270.0,
+        "ins": 44754.0,
+        "rto": 146120.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "NEW CODE XL6",
+        "variant": "XL6 ALPHA 1.5L 5MT-XLR4FZ200",
+        "code": "XLR4FZ200",
+        "ex": 1252043.63,
+        "tcs": 12520.0,
+        "ew": 24869.0,
+        "ccp": 8031.0,
+        "ins": 43736.0,
+        "rto": 140533.80,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "NEW CODE XL6",
+        "variant": "XL6 ZETA 1.5L 5MT-XLR4FZ100",
+        "code": "XLR4FZ100",
+        "ex": 1166044.0,
+        "tcs": 11660.0,
+        "ew": 22442.0,
+        "ccp": 7241.0,
+        "ins": 41909.0,
+        "rto": 130946.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "NEW CODE XL6",
+        "variant": "XL6 ALPHA+ 1.5L 6AT (DUAL TONE)-XLA4FZB00",
+        "code": "XLA4FZB00",
+        "ex": 1471044.0,
+        "tcs": 14710.0,
+        "ew": 30370.0,
+        "ccp": 9701.0,
+        "ins": 47345.0,
+        "rto": 164787.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "NEW CODE XL6",
+        "variant": " XL6  ALPHA+ 1.5L 6AT-XLA4FZB00",
+        "code": "XLA4FZB00",
+        "ex": 1455643.63,
+        "tcs": 14556.0,
+        "ew": 28547.0,
+        "ccp": 9251.0,
+        "ins": 47025.0,
+        "rto": 163093.79,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "NEW CODE XL6",
+        "variant": "XL6 ALPHA 1.5L 6AT-XLA4FZ200",
+        "code": "XLA4FZ200",
+        "ex": 1403644.0,
+        "tcs": 14036.0,
+        "ew": 27367.0,
+        "ccp": 8831.0,
+        "ins": 45922.0,
+        "rto": 157443.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "NEW CODE XL6",
+        "variant": "XL6 ZETA 1.5L 6AT-XLA4FZ100",
+        "code": "XLA4FZ100",
+        "ex": 1311644.0,
+        "tcs": 13116.0,
+        "ew": 25167.0,
+        "ccp": 8041.0,
+        "ins": 43993.0,
+        "rto": 147316.84,
+        "acc": 20058.0,
+        "tag": 600.0
+    },
+    {
+        "model": "INVICTO",
+        "variant": "Invicto ZETA+ 7 Seater 2.0L CVT-IVA4JZB00",
+        "code": "IVA4JZB00",
+        "ex": 2529494.0,
+        "tcs": 25295.0,
+        "ew": 49052.0,
+        "ccp": 15152.0,
+        "ins": 80687.0,
+        "rto": 283296.84,
+        "acc": 21743.0,
+        "tag": 600.0
+    },
+    {
+        "model": "INVICTO",
+        "variant": "Invicto ZETA+ 8 Seater 2.0L CVT-IVA4JZA00",
+        "code": "IVA4JZA00",
+        "ex": 2534494.0,
+        "tcs": 25345.0,
+        "ew": 49150.0,
+        "ccp": 15182.0,
+        "ins": 80789.0,
+        "rto": 283851.84,
+        "acc": 21743.0,
+        "tag": 600.0
+    },
+    {
+        "model": "INVICTO",
+        "variant": "Invicto ALPHA+ 7 Seater 2.0L CVT-IVA4JZM00",
+        "code": "IVA4JZM00",
+        "ex": 2901494.0,
+        "tcs": 29015.0,
+        "ew": 56012.0,
+        "ccp": 17351.0,
+        "ins": 92391.0,
+        "rto": 325171.84,
+        "acc": 21743.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  OLD CODE",
+        "variant": "FRONX SIGMA CNG 1.2L MT -FRRCGL200",
+        "code": "FRRCGL200",
+        "ex": 775152.0,
+        "tcs": 0.0,
+        "ew": 14184.0,
+        "ccp": 5357.0,
+        "ins": 33686.0,
+        "rto": 72703.68,
+        "acc": 19934.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  OLD CODE",
+        "variant": "FRONX TURBO ALPHA 1.0L 6AT (DUAL TONE) -FRA4JZ200",
+        "code": "FRA4JZ200",
+        "ex": 1159853.0,
+        "tcs": 11599.0,
+        "ew": 21473.0,
+        "ccp": 8107.0,
+        "ins": 38927.0,
+        "rto": 130593.83,
+        "acc": 19856.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  OLD CODE",
+        "variant": "FRONX TURBO ALPHA 1.0L 6AT -FRA4JZ200",
+        "code": "FRA4JZ200",
+        "ex": 1144853.0,
+        "tcs": 11449.0,
+        "ew": 21008.0,
+        "ccp": 7927.0,
+        "ins": 38555.0,
+        "rto": 128913.83,
+        "acc": 19856.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  OLD CODE",
+        "variant": "FRONX TURBO ALPHA 1.0L 5MT (DUAL TONE) -FRR4JZ200",
+        "code": "FRR4JZ200",
+        "ex": 1084853.0,
+        "tcs": 10849.0,
+        "ew": 20456.0,
+        "ccp": 7748.0,
+        "ins": 37722.0,
+        "rto": 122293.83,
+        "acc": 19856.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  OLD CODE",
+        "variant": "FRONX TURBO ALPHA 1.0L 5MT -FRR4JZ200",
+        "code": "FRR4JZ200",
+        "ex": 1069853.0,
+        "tcs": 10699.0,
+        "ew": 20026.0,
+        "ccp": 7637.0,
+        "ins": 37230.0,
+        "rto": 120623.83,
+        "acc": 19856.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  NEW CODE",
+        "variant": "FRONX DELTA 6AB 1.2L AGS -FRA4IV100",
+        "code": "FRA4IV100",
+        "ex": 814853.0,
+        "tcs": 0.0,
+        "ew": 14915.0,
+        "ccp": 5629.0,
+        "ins": 34164.0,
+        "rto": 76276.77,
+        "acc": 19934.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  NEW CODE",
+        "variant": "FRONX DELTA+ 6AB 1.2L AGS -FRA4IVA00",
+        "code": "FRA4IVA00",
+        "ex": 854452.0,
+        "tcs": 0.0,
+        "ew": 15635.0,
+        "ccp": 5900.0,
+        "ins": 34640.0,
+        "rto": 79840.68,
+        "acc": 19934.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  NEW CODE",
+        "variant": "FRONX TURBO ZETA 1.0L 6AT -FRA4JZ100",
+        "code": "FRA4JZ100",
+        "ex": 1098853.0,
+        "tcs": 10989.0,
+        "ew": 20107.0,
+        "ccp": 7587.0,
+        "ins": 37578.0,
+        "rto": 123813.83,
+        "acc": 19856.0,
+        "tag": 600.0
+    },
+    {
+        "model": "FRONX  NEW CODE",
+        "variant": "FRONX TURBO ALPHA 1.0L 6AT -FRA4JZ200",
+        "code": "FRA4JZ200",
+        "ex": 1148853.0,
+        "tcs": 11489.0,
+        "ew": 21008.0,
+        "ccp": 7927.0,
+        "ins": 38622.0,
+        "rto": 129353.83,
+        "acc": 19856.0,
+        "tag": 600.0
+    }
+];
+
+    const modelSelect = document.getElementById("modelSelect");
+    const variantSelect = document.getElementById("variantSelect");
+    const billArea = document.getElementById("billArea");
+    const shareBtn = document.getElementById("shareBtn");
+
+    // Helper to format numbers as Indian Rupees (₹)
+    function formatINR(number) {
+        // Ensure the number is treated as a float for formatting
+        const num = parseFloat(number);
+        if (isNaN(num)) return '₹ 0';
+        return `₹ ${num.toLocaleString('en-IN', { minimumFractionDigits: num % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
+    }
+
+    // Initialize Model Selector
+    function initializeSelectors() {
+        // Use the map/Set combination to get unique model names
+        const models = [...new Set(cars.map(c => c.model))].sort();
+        models.forEach(model => {
+            modelSelect.innerHTML += `<option value="${model}">${model}</option>`;
+        });
+    }
+
+    // Filter Variants based on selected Model
+    function filterVariants() {
+        const selectedModel = modelSelect.value;
+        variantSelect.innerHTML = '<option value="">-- Select a Variant --</option>';
+        variantSelect.disabled = true;
+        billArea.classList.add("hidden");
+        shareBtn.classList.add("hidden");
+
+        if (selectedModel) {
+            cars.filter(c => c.model === selectedModel)
+                .forEach(c => variantSelect.innerHTML += `<option value="${c.variant}">${c.variant}</option>`);
+            variantSelect.disabled = false;
+        }
+        // Reset editable inputs when model is changed
+        document.getElementById("input_ins").value = '';
+        document.getElementById("input_rto").value = '';
+        document.getElementById("input_acc").value = '';
+        document.getElementById("discountInput").value = '';
+        
+        // Recalculate and clear the quote display
+        calculatePrice();
+    }
+
+    // Calculate Price based on selected Variant and options
+    function calculatePrice() {
+        const variantName = variantSelect.value;
+        
+        // Hide elements if no valid variant is selected
+        if (!variantName) {
+            billArea.classList.add("hidden");
+            shareBtn.classList.add("hidden");
+            document.getElementById("p_final").innerText = formatINR(0);
+            return;
+        }
+
+        const car = cars.find(c => c.variant === variantName);
+        if (!car) return; // Should not happen with valid data
+
+        billArea.classList.remove("hidden");
+        shareBtn.classList.remove("hidden");
+
+        // Set Text for Header (Used in Screenshot)
+        document.getElementById("rec_model").innerText = car.model;
+        document.getElementById("rec_variant").innerText = car.variant;
+
+        // Editable fields / Price inputs
+        const insInput = document.getElementById("input_ins");
+        const rtoInput = document.getElementById("input_rto");
+        const accInput = document.getElementById("input_acc");
+        const discountInput = document.getElementById("discountInput");
+
+        // If selecting a new variant, pre-fill editable inputs with default values
+        const isVariantChange = document.activeElement && document.activeElement.id === 'variantSelect';
+        if (isVariantChange || (insInput.value === '' && rtoInput.value === '' && accInput.value === '')) {
+            insInput.value = Math.round(car.ins); // Use Math.round for cleaner default display
+            rtoInput.value = Math.round(car.rto);
+            accInput.value = Math.round(car.acc);
+        }
+
+        // --- CALCULATION VALUES ---
+        // Fixed/Mandatory prices
+        const exAmount = car.ex;
+        const tcsAmount = car.tcs;
+        document.getElementById("p_ex").innerText = formatINR(exAmount);
+        document.getElementById("p_tcs").innerText = formatINR(tcsAmount);
+
+        // Get value from editable inputs (treating empty/non-numeric as 0)
+        const insAmount = Number(insInput.value) || 0;
+        const rtoAmount = Number(rtoInput.value) || 0;
+        const accAmount = Number(accInput.value) || 0;
+        const discountAmount = Number(discountInput.value) || 0;
+
+        // Optional amounts (add to total only if checkbox is checked)
+        const isEwChecked = document.getElementById("check_ew").checked;
+        const isCcpChecked = document.getElementById("check_ccp").checked;
+        const isTagChecked = document.getElementById("check_tag").checked;
+
+        const ewAmount = isEwChecked ? car.ew : 0;
+        const ccpAmount = isCcpChecked ? car.ccp : 0;
+        const tagAmount = isTagChecked ? car.tag : 0;
+
+        // Display optional amounts
+        document.getElementById("p_ew").innerText = formatINR(car.ew);
+        document.getElementById("p_ccp").innerText = formatINR(car.ccp);
+        document.getElementById("p_tag").innerText = formatINR(car.tag);
+
+        // Calculate Total On-Road Price (before discount)
+        let totalOnRoad = exAmount + tcsAmount + insAmount + rtoAmount + accAmount + ewAmount + ccpAmount + tagAmount;
+
+        document.getElementById("p_total").innerText = formatINR(totalOnRoad);
+
+        // Apply Discount
+        const finalPrice = totalOnRoad - discountAmount;
+
+        // Show discount row for screenshot if discount is applied
+        const discountRow = document.getElementById("rec_discount_row");
+        const discountValSpan = document.getElementById("rec_discount_val");
+        if (discountAmount > 0) {
+            discountRow.classList.remove("hidden");
+            discountValSpan.innerText = formatINR(-discountAmount);
+        } else {
+            discountRow.classList.add("hidden");
+            discountValSpan.innerText = formatINR(0);
+        }
+
+        document.getElementById("p_final").innerText = formatINR(finalPrice);
+    }
+    
+    // Logic for taking a screenshot
+    const shareScreenshot = async () => {
+        // Elements needed for screenshot manipulation
+        const insRow = document.getElementById("row_ins");
+        const rtoRow = document.getElementById("row_rto");
+        const accRow = document.getElementById("row_acc");
+        const insInput = document.getElementById("input_ins");
+        const rtoInput = document.getElementById("input_rto");
+        const accInput = document.getElementById("input_acc");
+
+        // Get current values from editable inputs
+        const insVal = insInput.value;
+        const rtoVal = rtoInput.value;
+        const accVal = accInput.value;
+
+        // Storage for the temporary span elements
+        let tempInsSpan, tempRtoSpan, tempAccSpan;
+
+        // Function to replace input with span (for clean screenshot)
+        const setupScreenshot = () => {
+            // Replace Insurance input with formatted text span
+            tempInsSpan = document.createElement('span');
+            tempInsSpan.classList.add('currency');
+            tempInsSpan.innerText = formatINR(Number(insVal));
+            insInput.replaceWith(tempInsSpan);
+
+            // Replace RTO input with formatted text span
+            tempRtoSpan = document.createElement('span');
+            tempRtoSpan.classList.add('currency');
+            tempRtoSpan.innerText = formatINR(Number(rtoVal));
+            rtoInput.replaceWith(tempRtoSpan);
+
+            // Replace Accessories input with formatted text span
+            tempAccSpan = document.createElement('span');
+            tempAccSpan.classList.add('currency');
+            tempAccSpan.innerText = formatINR(Number(accVal));
+            accInput.replaceWith(tempAccSpan);
+            
+            // Show the Bill Header
+            document.getElementById("receiptHeader").style.display = 'block';
+
+            // Un-ignore the discount section for the screenshot
+            document.querySelector('.discount-section').setAttribute('data-html2canvas-ignore', 'false');
+        };
+
+        // Function to revert span back to input (CRITICAL for functionality)
+        const revertChanges = () => {
+            if (tempInsSpan && tempInsSpan.parentNode === insRow) tempInsSpan.replaceWith(insInput);
+            if (tempRtoSpan && tempRtoSpan.parentNode === rtoRow) tempRtoSpan.replaceWith(rtoInput);
+            if (tempAccSpan && tempAccSpan.parentNode === accRow) tempAccSpan.replaceWith(accInput);
+            
+            // Hide the discount section again from the screenshot process
+            document.querySelector('.discount-section').setAttribute('data-html2canvas-ignore', 'true');
+        };
+
+        try {
+            // Prepare for screenshot
+            setupScreenshot();
+
+            // Use html2canvas to take the screenshot of the bill area
+            const canvas = await html2canvas(billArea, {
+                // Ignore the share button area which is outside billArea, but added safety
+                ignoreElements: (element) => element.getAttribute('data-html2canvas-ignore') === 'true',
+                scale: 2, // Use a higher scale for better resolution
+                logging: false // Turn off console logging
+            });
+
+            // Convert canvas to image data URL
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL("image/png");
+            
+            // Generate dynamic filename
+            const modelName = document.getElementById('rec_model').innerText.replace(/\s/g, '_');
+            link.download = `Nexa_Price_Quote_${modelName || 'Quote'}.png`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+        } catch (error) {
+            console.error("Error generating screenshot:", error);
+            alert("Could not generate quote image. Please try again.");
+        } finally {
+            // CRITICAL: Revert changes to restore interactivity
+            revertChanges();
+        }
+    };
+
+    // Run initialization when the script loads
+    initializeSelectors();
+</script>
+
+</body>
+</html>
