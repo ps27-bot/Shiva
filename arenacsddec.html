@@ -1,0 +1,1624 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>csd Price</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-top: 20px;
+            color: #555;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        select, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #readOnlyDetails, #chargesBreakdown {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-row span:first-child {
+            font-weight: 500;
+        }
+        .editable-charge {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        .editable-charge label {
+            flex-basis: 50%;
+            margin-top: 0;
+            font-weight: normal;
+        }
+        .editable-charge input {
+            flex-basis: 45%;
+            margin-top: 0;
+            margin-bottom: 0;
+            text-align: right;
+        }
+        .checkbox-charge {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        .checkbox-charge label {
+            margin: 0;
+            font-weight: normal;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-group span {
+            min-width: 100px; /* Ensure space for the amount */
+            text-align: right;
+            margin-right: 15px;
+            font-size: 0.9em;
+        }
+        .final-total {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e0f7fa;
+            border: 2px solid #00bcd4;
+            border-radius: 4px;
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: right;
+            color: #00bcd4;
+        }
+        .read-only-input {
+            background-color: #eee;
+        }
+        /* New styles for the Share button */
+        .share-container {
+            margin-top: 20px;
+            text-align: center; /* Center the button */
+        }
+        .share-button {
+            padding: 10px 20px;
+            background-color: #4CAF50; /* Green color for action */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+        }
+        .share-button:hover {
+            background-color: #45a049;
+        }
+        /* Hidden temporary element for canvas creation */
+        #quotationCanvas {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
+    </style>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <div class="container" id="quotationContent">
+        <h1>Csd Price-Nov25</h1>
+
+        <label for="modelSelect">Select Model -</label>
+        <select id="modelSelect" onchange="populateVariants()"></select>
+
+        <label for="variantSelect">Select Variant -</label>
+        <select id="variantSelect" onchange="displayBreakdown()"></select>
+
+        <h2>Basic Details</h2>
+        <div id="readOnlyDetails">
+            <p>Select a Model and Variant to see details.</p>
+        </div>
+
+        <h2>On Road Charges Breakdown</h2>
+        <div id="chargesBreakdown">
+            </div>
+        
+        <div id="finalOnRoadPrice" class="final-total">
+            Now OnRoad final. : ₹ 0
+        </div>
+    </div>
+    
+    <div class="container share-container">
+        <button class="share-button" onclick="generateAndShareImage()">
+            📸 Generate & Share Quotation
+        </button>
+    </div>
+
+    <script>
+        // Data generated from the CSD PRICE.csv file
+        const priceData = [
+    {
+        "Index": 67594,
+        "MODEL": "Alto K10",
+        "Variant Name": "ALTO K10 VXI CNG 1L 5MT",
+        "Basic Price": 427320,
+        "Ex-showroom Price": 504237,
+        "DD Amount": 467915,
+        "INSURANCE": 19854,
+        "RTO": 50637,
+        "ACCESSORIES": 15309,
+        "FASTAG": 600,
+        "EW": 8791,
+        "CCP": 2761
+    },
+    {
+        "Index": 64334,
+        "MODEL": "Alto K10",
+        "Variant Name": "ALTO K10 LXI 1L 5MT",
+        "Basic Price": 317056,
+        "Ex-showroom Price": 374126,
+        "DD Amount": 347176,
+        "INSURANCE": 17663,
+        "RTO": 38757,
+        "ACCESSORIES": 15309,
+        "FASTAG": 600,
+        "EW": 6608,
+        "CCP": 2077
+    },
+    {
+        "Index": 65267,
+        "MODEL": "Alto K10",
+        "Variant Name": "ALTO K10 VXI 1L 5MT",
+        "Basic Price": 353282,
+        "Ex-showroom Price": 416873,
+        "DD Amount": 386844,
+        "INSURANCE": 18000,
+        "RTO": 43257,
+        "ACCESSORIES": 15309,
+        "FASTAG": 600,
+        "EW": 7434,
+        "CCP": 2336
+    },
+    {
+        "Index": 64080,
+        "MODEL": "Alto K10",
+        "Variant Name": "ALTO K10 VXI 1L AGS",
+        "Basic Price": 396052,
+        "Ex-showroom Price": 467341,
+        "DD Amount": 433677,
+        "INSURANCE": 18763,
+        "RTO": 47307,
+        "ACCESSORIES": 15309,
+        "FASTAG": 600,
+        "EW": 8177,
+        "CCP": 2572
+    },
+    {
+        "Index": 65260,
+        "MODEL": "Alto K10",
+        "Variant Name": "ALTO K10 VXI+ 1L 5MT",
+        "Basic Price": 395404,
+        "Ex-showroom Price": 466577,
+        "DD Amount": 432967,
+        "INSURANCE": 18853,
+        "RTO": 47757,
+        "ACCESSORIES": 15309,
+        "FASTAG": 600,
+        "EW": 8260,
+        "CCP": 2596
+    },
+    {
+        "Index": 64346,
+        "MODEL": "Alto K10",
+        "Variant Name": "ALTO K10 VXI+ 1L AGS",
+        "Basic Price": 438581,
+        "Ex-showroom Price": 517525,
+        "DD Amount": 480246,
+        "INSURANCE": 19620,
+        "RTO": 51807,
+        "ACCESSORIES": 15309,
+        "FASTAG": 600,
+        "EW": 9003,
+        "CCP": 2832
+    },
+    {
+        "Index": 67616,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA LXI (O) CNG 1.5L 5MT",
+        "Basic Price": 641973,
+        "Ex-showroom Price": 898762,
+        "DD Amount": 773577,
+        "INSURANCE": 34575,
+        "RTO": 85286,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 17747,
+        "CCP": 4755
+    },
+    {
+        "Index": 67621,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA VXI (O) CNG 1.5L 5MT",
+        "Basic Price": 711915,
+        "Ex-showroom Price": 996680,
+        "DD Amount": 857857,
+        "INSURANCE": 36663,
+        "RTO": 114623,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 19682,
+        "CCP": 5275
+    },
+    {
+        "Index": 67599,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA ZXI (O) CNG 1.5L 5MT",
+        "Basic Price": 792687,
+        "Ex-showroom Price": 1109761,
+        "DD Amount": 955187,
+        "INSURANCE": 39048,
+        "RTO": 127163,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 22184,
+        "CCP": 5947
+    },
+    {
+        "Index": 64068,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA  LXI 1.5L 5MT",
+        "Basic Price": 571898,
+        "Ex-showroom Price": 800657,
+        "DD Amount": 689137,
+        "INSURANCE": 31944,
+        "RTO": 77096,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 15989,
+        "CCP": 4283
+    },
+    {
+        "Index": 64070,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA  SMAR HYBRID ZXI+ 1.5L 5MT",
+        "Basic Price": 795608,
+        "Ex-showroom Price": 1113851,
+        "DD Amount": 958707,
+        "INSURANCE": 38533,
+        "RTO": 129363,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 22573,
+        "CCP": 6053
+    },
+    {
+        "Index": 64075,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA  SMART HYBRID ZXI 1.5L 5MT",
+        "Basic Price": 718026,
+        "Ex-showroom Price": 1005236,
+        "DD Amount": 865221,
+        "INSURANCE": 36282,
+        "RTO": 117153,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 20426,
+        "CCP": 5475
+    },
+    {
+        "Index": 64359,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA  SMART HYBRID ZXI+ 1.5L 5MT-DUAL TONE",
+        "Basic Price": 806893,
+        "Ex-showroom Price": 1129650,
+        "DD Amount": 972306,
+        "INSURANCE": 38846,
+        "RTO": 131057,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 22573,
+        "CCP": 6053
+    },
+    {
+        "Index": 64339,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA  VXI 1.5L 5MT",
+        "Basic Price": 640900,
+        "Ex-showroom Price": 897259,
+        "DD Amount": 772284,
+        "INSURANCE": 33972,
+        "RTO": 86096,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 17924,
+        "CCP": 4803
+    },
+    {
+        "Index": 67624,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA SMART HYBRID  ZXI 1.5L 5MT-DUAL TONE",
+        "Basic Price": 739416,
+        "Ex-showroom Price": 1035182,
+        "DD Amount": 890996,
+        "INSURANCE": 36595,
+        "RTO": 118847,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 20426,
+        "CCP": 5475
+    },
+    {
+        "Index": 64224,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA SMART HYBRID VXI 1.5L 6AT",
+        "Basic Price": 731148,
+        "Ex-showroom Price": 1023607,
+        "DD Amount": 881033,
+        "INSURANCE": 36689,
+        "RTO": 119353,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 20520,
+        "CCP": 5499
+    },
+    {
+        "Index": 64338,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA SMART HYBRID ZXI 1.5L 6AT",
+        "Basic Price": 814886,
+        "Ex-showroom Price": 1140840,
+        "DD Amount": 981937,
+        "INSURANCE": 39031,
+        "RTO": 132003,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 23045,
+        "CCP": 6171
+    },
+    {
+        "Index": 67623,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA SMART HYBRID ZXI 1.5L 6AT- DUAL TONE",
+        "Basic Price": 834543,
+        "Ex-showroom Price": 1168360,
+        "DD Amount": 1015680,
+        "INSURANCE": 39333,
+        "RTO": 133697,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 23045,
+        "CCP": 6171
+    },
+    {
+        "Index": 64298,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA SMART HYBRID ZXI+ 1.5L 6AT",
+        "Basic Price": 892545,
+        "Ex-showroom Price": 1249562,
+        "DD Amount": 1086271,
+        "INSURANCE": 41270,
+        "RTO": 144213,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 25193,
+        "CCP": 6750
+    },
+    {
+        "Index": 64350,
+        "MODEL": "Brezza",
+        "Variant Name": "BREZZA SMART HYBRID ZXI+ 1.5L 6AT-DUAL TONE",
+        "Basic Price": 905049,
+        "Ex-showroom Price": 1267068,
+        "DD Amount": 1101489,
+        "INSURANCE": 41584,
+        "RTO": 145907,
+        "ACCESSORIES": 21628,
+        "FASTAG": 600,
+        "EW": 25193,
+        "CCP": 6750
+    },
+    {
+        "Index": 64322,
+        "MODEL": "Celerio",
+        "Variant Name": "CELERIO VXI CNG 1L 5MT",
+        "Basic Price": 476033,
+        "Ex-showroom Price": 561719,
+        "DD Amount": 521256,
+        "INSURANCE": 21009,
+        "RTO": 56577,
+        "ACCESSORIES": 15658,
+        "FASTAG": 600,
+        "EW": 9888,
+        "CCP": 3103
+    },
+    {
+        "Index": 64719,
+        "MODEL": "Celerio",
+        "Variant Name": "CELERIO VXI 1L ISS 5MT",
+        "Basic Price": 406215,
+        "Ex-showroom Price": 479334,
+        "DD Amount": 444805,
+        "INSURANCE": 19124,
+        "RTO": 49197,
+        "ACCESSORIES": 15658,
+        "FASTAG": 600,
+        "EW": 8531,
+        "CCP": 2679
+    },
+    {
+        "Index": 64713,
+        "MODEL": "Celerio",
+        "Variant Name": "CELERIO VXI 1L ISS AGS",
+        "Basic Price": 444356,
+        "Ex-showroom Price": 524340,
+        "DD Amount": 486570,
+        "INSURANCE": 19893,
+        "RTO": 53247,
+        "ACCESSORIES": 15658,
+        "FASTAG": 600,
+        "EW": 9275,
+        "CCP": 2915
+    },
+    {
+        "Index": 64720,
+        "MODEL": "Celerio",
+        "Variant Name": "CELERIO ZXI 1L ISS 5MT",
+        "Basic Price": 451718,
+        "Ex-showroom Price": 533027,
+        "DD Amount": 494631,
+        "INSURANCE": 20063,
+        "RTO": 54147,
+        "ACCESSORIES": 15658,
+        "FASTAG": 600,
+        "EW": 9440,
+        "CCP": 2962
+    },
+    {
+        "Index": 64239,
+        "MODEL": "Celerio",
+        "Variant Name": "CELERIO ZXI 1L ISS AGS",
+        "Basic Price": 489898,
+        "Ex-showroom Price": 578079,
+        "DD Amount": 536438,
+        "INSURANCE": 20830,
+        "RTO": 58197,
+        "ACCESSORIES": 15658,
+        "FASTAG": 600,
+        "EW": 10183,
+        "CCP": 3198
+    },
+    {
+        "Index": 64076,
+        "MODEL": "Celerio",
+        "Variant Name": "CELERIO ZXI+ 1L ISS 5MT",
+        "Basic Price": 499676,
+        "Ex-showroom Price": 589618,
+        "DD Amount": 547145,
+        "INSURANCE": 21035,
+        "RTO": 59277,
+        "ACCESSORIES": 15658,
+        "FASTAG": 600,
+        "EW": 10384,
+        "CCP": 3257
+    },
+    {
+        "Index": 64328,
+        "MODEL": "Celerio",
+        "Variant Name": "CELERIO ZXI+ 1L ISS AGS",
+        "Basic Price": 537135,
+        "Ex-showroom Price": 633819,
+        "DD Amount": 588163,
+        "INSURANCE": 21800,
+        "RTO": 63327,
+        "ACCESSORIES": 15658,
+        "FASTAG": 600,
+        "EW": 11127,
+        "CCP": 3493
+    },
+    {
+        "Index": 64342,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE VXI CNG 1.2L 5MT",
+        "Basic Price": 666407,
+        "Ex-showroom Price": 786360,
+        "DD Amount": 729715,
+        "INSURANCE": 29840,
+        "RTO": 75045,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 14691,
+        "CCP": 4165
+    },
+    {
+        "Index": 64333,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE ZXI CNG 1.2L 5MT",
+        "Basic Price": 750113,
+        "Ex-showroom Price": 885133,
+        "DD Amount": 821373,
+        "INSURANCE": 31649,
+        "RTO": 84099,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 16532,
+        "CCP": 4685
+    },
+    {
+        "Index": 64064,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE LXI 1.2L ISS 5MT",
+        "Basic Price": 516803,
+        "Ex-showroom Price": 609827,
+        "DD Amount": 565899,
+        "INSURANCE": 26134,
+        "RTO": 59070,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 11446,
+        "CCP": 3221
+    },
+    {
+        "Index": 64062,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE VXI 1.2L ISS 5MT",
+        "Basic Price": 593499,
+        "Ex-showroom Price": 700328,
+        "DD Amount": 649881,
+        "INSURANCE": 27735,
+        "RTO": 67305,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 13122,
+        "CCP": 3717
+    },
+    {
+        "Index": 64329,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE VXI 1.2L ISS AGS",
+        "Basic Price": 631688,
+        "Ex-showroom Price": 745392,
+        "DD Amount": 691698,
+        "INSURANCE": 28524,
+        "RTO": 71355,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 13948,
+        "CCP": 3953
+    },
+    {
+        "Index": 64063,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE ZXI 1.2L ISS 5MT",
+        "Basic Price": 677989,
+        "Ex-showroom Price": 800027,
+        "DD Amount": 742398,
+        "INSURANCE": 29496,
+        "RTO": 76359,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 14962,
+        "CCP": 4236
+    },
+    {
+        "Index": 64330,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE ZXI+ 1.2L ISS 5MT",
+        "Basic Price": 736252,
+        "Ex-showroom Price": 868777,
+        "DD Amount": 806196,
+        "INSURANCE": 30696,
+        "RTO": 82533,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 16213,
+        "CCP": 4602
+    },
+    {
+        "Index": 64335,
+        "MODEL": "EECO ",
+        "Variant Name": "EECO 5 STR AC CNG 1.2L 5MT",
+        "Basic Price": 508885,
+        "Ex-showroom Price": 600484,
+        "DD Amount": 557229,
+        "INSURANCE": 26377,
+        "RTO": 59988,
+        "ACCESSORIES": 13239,
+        "FASTAG": 600,
+        "EW": 10514,
+        "CCP": 3304
+    },
+    {
+        "Index": 64222,
+        "MODEL": "EECO ",
+        "Variant Name": "EECO 5 STR AC 1.2L 5MT",
+        "Basic Price": 439177,
+        "Ex-showroom Price": 518229,
+        "DD Amount": 480899,
+        "INSURANCE": 25377,
+        "RTO": 52608,
+        "ACCESSORIES": 13239,
+        "FASTAG": 600,
+        "EW": 9157,
+        "CCP": 2879
+    },
+    {
+        "Index": 64309,
+        "MODEL": "EECO ",
+        "Variant Name": "EECO 5 STR STD 1.2L 5MT",
+        "Basic Price": 411472,
+        "Ex-showroom Price": 485537,
+        "DD Amount": 450562,
+        "INSURANCE": 24029,
+        "RTO": 44438,
+        "ACCESSORIES": 13239,
+        "FASTAG": 600,
+        "EW": 8614,
+        "CCP": 2702
+    },
+    {
+        "Index": 64717,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA VXI (O) CNG 1.5L 5MT",
+        "Basic Price": 748142,
+        "Ex-showroom Price": 1047398,
+        "DD Amount": 901511,
+        "INSURANCE": 39485,
+        "RTO": 121157,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 20839,
+        "CCP": 5581
+    },
+    {
+        "Index": 64229,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA ZXI (O) CNG 1.5L 5MT",
+        "Basic Price": 823236,
+        "Ex-showroom Price": 1152530,
+        "DD Amount": 991999,
+        "INSURANCE": 41860,
+        "RTO": 132839,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 22892,
+        "CCP": 6136
+    },
+    {
+        "Index": 64308,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA SMART HYBRID LXI (O) 1.5L 5MT",
+        "Basic Price": 606820,
+        "Ex-showroom Price": 849547,
+        "DD Amount": 731218,
+        "INSURANCE": 34268,
+        "RTO": 81965,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 17039,
+        "CCP": 4567
+    },
+    {
+        "Index": 64715,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA SMART HYBRID VXI (O) 1.5L 5MT",
+        "Basic Price": 681146,
+        "Ex-showroom Price": 953604,
+        "DD Amount": 820780,
+        "INSURANCE": 36550,
+        "RTO": 91442,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 19069,
+        "CCP": 5109
+    },
+    {
+        "Index": 64355,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA SMART HYBRID VXI 1.5L 6AT",
+        "Basic Price": 777386,
+        "Ex-showroom Price": 1088340,
+        "DD Amount": 936750,
+        "INSURANCE": 39475,
+        "RTO": 125997,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 21688,
+        "CCP": 5806
+    },
+    {
+        "Index": 64244,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA SMART HYBRID ZXI (O) 1.5L 5MT",
+        "Basic Price": 756433,
+        "Ex-showroom Price": 1059006,
+        "DD Amount": 911501,
+        "INSURANCE": 38851,
+        "RTO": 122829,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 21134,
+        "CCP": 5664
+    },
+    {
+        "Index": 64340,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA SMART HYBRID ZXI 1.5L 6AT",
+        "Basic Price": 853241,
+        "Ex-showroom Price": 1194537,
+        "DD Amount": 1038436,
+        "INSURANCE": 41776,
+        "RTO": 137679,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 23742,
+        "CCP": 6360
+    },
+    {
+        "Index": 64343,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA SMART HYBRID ZXI+ 1.5L 5MT",
+        "Basic Price": 804625,
+        "Ex-showroom Price": 1126474,
+        "DD Amount": 969573,
+        "INSURANCE": 40316,
+        "RTO": 130265,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 22432,
+        "CCP": 6006
+    },
+    {
+        "Index": 67610,
+        "MODEL": "Ertiga",
+        "Variant Name": "ERTIGA SMART HYBRID ZXI+ 1.5L 6AT",
+        "Basic Price": 907527,
+        "Ex-showroom Price": 1270537,
+        "DD Amount": 1104505,
+        "INSURANCE": 43242,
+        "RTO": 145115,
+        "ACCESSORIES": 29589,
+        "FASTAG": 600,
+        "EW": 25051,
+        "CCP": 6714
+    },
+    {
+        "Index": 65264,
+        "MODEL": "S-Presso",
+        "Variant Name": "S-PRESSO VXI CNG 1L 5MT",
+        "Basic Price": 403319,
+        "Ex-showroom Price": 475916,
+        "DD Amount": 441634,
+        "INSURANCE": 19505,
+        "RTO": 48837,
+        "ACCESSORIES": 13339,
+        "FASTAG": 600,
+        "EW": 8461,
+        "CCP": 2655
+    },
+    {
+        "Index": 65263,
+        "MODEL": "S-Presso",
+        "Variant Name": "S-PRESSO LXI 1L ISS 5MT",
+        "Basic Price": 295068,
+        "Ex-showroom Price": 348180,
+        "DD Amount": 323099,
+        "INSURANCE": 16808,
+        "RTO": 36957,
+        "ACCESSORIES": 13339,
+        "FASTAG": 600,
+        "EW": 6278,
+        "CCP": 1971
+    },
+    {
+        "Index": 65268,
+        "MODEL": "S-Presso",
+        "Variant Name": "S-PRESSO STD 1L ISS 5MT",
+        "Basic Price": 270309,
+        "Ex-showroom Price": 318964,
+        "DD Amount": 295988,
+        "INSURANCE": 16308,
+        "RTO": 30758,
+        "ACCESSORIES": 13339,
+        "FASTAG": 600,
+        "EW": 5782,
+        "CCP": 1817
+    },
+    {
+        "Index": 65262,
+        "MODEL": "S-Presso",
+        "Variant Name": "S-PRESSO VXI (O) 1L ISS AGS",
+        "Basic Price": 374923,
+        "Ex-showroom Price": 442409,
+        "DD Amount": 410541,
+        "INSURANCE": 18426,
+        "RTO": 45507,
+        "ACCESSORIES": 13339,
+        "FASTAG": 600,
+        "EW": 7847,
+        "CCP": 2466
+    },
+    {
+        "Index": 65265,
+        "MODEL": "S-Presso",
+        "Variant Name": "S-PRESSO VXI 1L ISS 5MT",
+        "Basic Price": 336660,
+        "Ex-showroom Price": 397259,
+        "DD Amount": 368643,
+        "INSURANCE": 17660,
+        "RTO": 41457,
+        "ACCESSORIES": 13339,
+        "FASTAG": 600,
+        "EW": 7104,
+        "CCP": 2230
+    },
+    {
+        "Index": 65261,
+        "MODEL": "S-Presso",
+        "Variant Name": "S-PRESSO VXI+ (O) 1L ISS AGS",
+        "Basic Price": 416624,
+        "Ex-showroom Price": 491616,
+        "DD Amount": 456203,
+        "INSURANCE": 19281,
+        "RTO": 50007,
+        "ACCESSORIES": 13339,
+        "FASTAG": 600,
+        "EW": 8673,
+        "CCP": 2726
+    },
+    {
+        "Index": 65266,
+        "MODEL": "S-Presso",
+        "Variant Name": "S-PRESSO VXI+ 1L ISS 5MT",
+        "Basic Price": 378443,
+        "Ex-showroom Price": 446563,
+        "DD Amount": 414395,
+        "INSURANCE": 18512,
+        "RTO": 45957,
+        "ACCESSORIES": 13339,
+        "FASTAG": 600,
+        "EW": 7930,
+        "CCP": 2490
+    },
+    {
+        "Index": 64341,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT VXI CNG 1.2L 5MT",
+        "Basic Price": 601779,
+        "Ex-showroom Price": 710099,
+        "DD Amount": 658948,
+        "INSURANCE": 31252,
+        "RTO": 69807,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 13629,
+        "CCP": 3870
+    },
+    {
+        "Index": 64723,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT ZXI CNG 1.2L 5MT",
+        "Basic Price": 674795,
+        "Ex-showroom Price": 796258,
+        "DD Amount": 738900,
+        "INSURANCE": 33252,
+        "RTO": 78267,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 15352,
+        "CCP": 4354
+    },
+    {
+        "Index": 64231,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT LXI 1.2L ISS 5MT",
+        "Basic Price": 465763,
+        "Ex-showroom Price": 549600,
+        "DD Amount": 510010,
+        "INSURANCE": 27137,
+        "RTO": 54867,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 10596,
+        "CCP": 3009
+    },
+    {
+        "Index": 64243,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT VXI 1.2L ISS 5MT",
+        "Basic Price": 526894,
+        "Ex-showroom Price": 621735,
+        "DD Amount": 576949,
+        "INSURANCE": 28787,
+        "RTO": 62067,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 12060,
+        "CCP": 3422
+    },
+    {
+        "Index": 64351,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT VXI 1.2L ISS AGS",
+        "Basic Price": 565137,
+        "Ex-showroom Price": 666861,
+        "DD Amount": 618825,
+        "INSURANCE": 29715,
+        "RTO": 66117,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 12886,
+        "CCP": 3658
+    },
+    {
+        "Index": 67597,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT VXI(O) 1.2L ISS 5MT",
+        "Basic Price": 554634,
+        "Ex-showroom Price": 654468,
+        "DD Amount": 607324,
+        "INSURANCE": 29249,
+        "RTO": 64407,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 12532,
+        "CCP": 3552
+    },
+    {
+        "Index": 64245,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT ZXI 1.2L ISS 5MT",
+        "Basic Price": 605624,
+        "Ex-showroom Price": 714636,
+        "DD Amount": 663158,
+        "INSURANCE": 31051,
+        "RTO": 70527,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 13771,
+        "CCP": 3906
+    },
+    {
+        "Index": 64234,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT ZXI 1.2L ISS AGS",
+        "Basic Price": 643872,
+        "Ex-showroom Price": 759769,
+        "DD Amount": 705040,
+        "INSURANCE": 31653,
+        "RTO": 74577,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 14597,
+        "CCP": 4142
+    },
+    {
+        "Index": 64348,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT ZXI+ 1.2L ISS 5MT",
+        "Basic Price": 662451,
+        "Ex-showroom Price": 781692,
+        "DD Amount": 725384,
+        "INSURANCE": 32107,
+        "RTO": 76557,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 15281,
+        "CCP": 4331
+    },
+    {
+        "Index": 67614,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT ZXI+ 1.2L ISS 5MT-DUAL TONE",
+        "Basic Price": 680616,
+        "Ex-showroom Price": 803127,
+        "DD Amount": 745274,
+        "INSURANCE": 32416,
+        "RTO": 77907,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 15281,
+        "CCP": 4331
+    },
+    {
+        "Index": 64712,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT ZXI+ 1.2L ISS AGS",
+        "Basic Price": 700863,
+        "Ex-showroom Price": 827018,
+        "DD Amount": 767445,
+        "INSURANCE": 33032,
+        "RTO": 80607,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 16095,
+        "CCP": 4567
+    },
+    {
+        "Index": 67613,
+        "MODEL": "Swift",
+        "Variant Name": "SWIFT ZXI+ 1.2L ISS AGS-DUAL TONE",
+        "Basic Price": 718238,
+        "Ex-showroom Price": 847521,
+        "DD Amount": 786470,
+        "INSURANCE": 33346,
+        "RTO": 81957,
+        "ACCESSORIES": 20035,
+        "FASTAG": 600,
+        "EW": 16095,
+        "CCP": 4567
+    },
+    {
+        "Index": 64069,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R LXI CNG 1L 5MT",
+        "Basic Price": 462738,
+        "Ex-showroom Price": 546030,
+        "DD Amount": 506698,
+        "INSURANCE": 20854,
+        "RTO": 55767,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 9735,
+        "CCP": 3056
+    },
+    {
+        "Index": 64716,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R VXI CNG 1L 5MT",
+        "Basic Price": 510665,
+        "Ex-showroom Price": 602584,
+        "DD Amount": 559178,
+        "INSURANCE": 21781,
+        "RTO": 60537,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 10608,
+        "CCP": 3328
+    },
+    {
+        "Index": 64353,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R LXI 1L ISS 5MT",
+        "Basic Price": 387020,
+        "Ex-showroom Price": 456683,
+        "DD Amount": 423786,
+        "INSURANCE": 18837,
+        "RTO": 47667,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 8248,
+        "CCP": 2596
+    },
+    {
+        "Index": 64354,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R VXI 1L ISS 5MT",
+        "Basic Price": 430887,
+        "Ex-showroom Price": 508446,
+        "DD Amount": 471821,
+        "INSURANCE": 19737,
+        "RTO": 52437,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 9121,
+        "CCP": 2867
+    },
+    {
+        "Index": 64357,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R VXI 1L ISS AGS",
+        "Basic Price": 469203,
+        "Ex-showroom Price": 553659,
+        "DD Amount": 513777,
+        "INSURANCE": 20507,
+        "RTO": 56487,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 9865,
+        "CCP": 3103
+    },
+    {
+        "Index": 64072,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R ZXI 1.2L ISS 5MT",
+        "Basic Price": 467472,
+        "Ex-showroom Price": 551616,
+        "DD Amount": 511881,
+        "INSURANCE": 25615,
+        "RTO": 56397,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 9853,
+        "CCP": 3092
+    },
+    {
+        "Index": 64304,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R ZXI 1.2L ISS AGS",
+        "Basic Price": 505821,
+        "Ex-showroom Price": 596868,
+        "DD Amount": 553874,
+        "INSURANCE": 26404,
+        "RTO": 60447,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 10596,
+        "CCP": 3328
+    },
+    {
+        "Index": 64241,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R ZXI+ 1.2L ISS 5MT-DUAL TONE",
+        "Basic Price": 512018,
+        "Ex-showroom Price": 604181,
+        "DD Amount": 560659,
+        "INSURANCE": 26560,
+        "RTO": 61257,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 10738,
+        "CCP": 3375
+    },
+    {
+        "Index": 64305,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R ZXI+ 1.2L ISS 5MT",
+        "Basic Price": 502985,
+        "Ex-showroom Price": 593522,
+        "DD Amount": 550768,
+        "INSURANCE": 26638,
+        "RTO": 60267,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 10738,
+        "CCP": 3375
+    },
+    {
+        "Index": 64067,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R ZXI+ 1.2L ISS AGS",
+        "Basic Price": 541443,
+        "Ex-showroom Price": 638902,
+        "DD Amount": 592880,
+        "INSURANCE": 27157,
+        "RTO": 64317,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 11481,
+        "CCP": 3611
+    },
+    {
+        "Index": 64221,
+        "MODEL": "Wagon R",
+        "Variant Name": "WAGON R ZXI+ 1.2L ISS AGS- DUAL TONE",
+        "Basic Price": 550500,
+        "Ex-showroom Price": 649589,
+        "DD Amount": 602797,
+        "INSURANCE": 27348,
+        "RTO": 65307,
+        "ACCESSORIES": 16546,
+        "FASTAG": 600,
+        "EW": 11481,
+        "CCP": 3611
+    },
+    {
+        "Index": 64079,
+        "MODEL": "Victoris",
+        "Variant Name": "VICTORIS VXI 1.5L 5MT",
+        "Basic Price": 813585,
+        "Ex-showroom Price": 1139019,
+        "DD Amount": 980370,
+        "INSURANCE": 56206,
+        "RTO": 132553,
+        "ACCESSORIES": 30200,
+        "FASTAG": 600,
+        "EW": 22845,
+        "CCP": 6112
+    },
+    {
+        "Index": 64235,
+        "MODEL": "Victoris",
+        "Variant Name": "VICTORIS ZXI(O) 1.5L 5MT",
+        "Basic Price": 973857,
+        "Ex-showroom Price": 1363400,
+        "DD Amount": 1185233,
+        "INSURANCE": 64246,
+        "RTO": 157633,
+        "ACCESSORIES": 30200,
+        "FASTAG": 600,
+        "EW": 27553,
+        "CCP": 7375
+    },
+    {
+        "Index": 64285,
+        "MODEL": "Victoris",
+        "Variant Name": "VICTORIS VXI STRONG HYBRID 1.5L ECVT",
+        "Basic Price": 1137206,
+        "Ex-showroom Price": 1592088,
+        "DD Amount": 1384037,
+        "INSURANCE": 74063,
+        "RTO": 182933,
+        "ACCESSORIES": 30200,
+        "FASTAG": 600,
+        "EW": 31707,
+        "CCP": 8496
+    },
+    {
+        "Index": 64296,
+        "MODEL": "Victoris",
+        "Variant Name": "VICTORIS VXI 1.5L 6AT",
+        "Basic Price": 924563,
+        "Ex-showroom Price": 1294388,
+        "DD Amount": 1125239,
+        "INSURANCE": 61705,
+        "RTO": 149713,
+        "ACCESSORIES": 30200,
+        "FASTAG": 600,
+        "EW": 25854,
+        "CCP": 6927
+    },
+    {
+        "Index": 64316,
+        "MODEL": "Victoris",
+        "Variant Name": "VICTORIS LXI 1.5L 5MT",
+        "Basic Price": 726897,
+        "Ex-showroom Price": 1017656,
+        "DD Amount": 875911,
+        "INSURANCE": 51622,
+        "RTO": 118253,
+        "ACCESSORIES": 30200,
+        "FASTAG": 600,
+        "EW": 20320,
+        "CCP": 5440
+    },
+    {
+        "Index": 64721,
+        "MODEL": "Victoris",
+        "Variant Name": "VICTORIS ZXI+(O) 1.5L 5MT",
+        "Basic Price": 1097113,
+        "Ex-showroom Price": 1535958,
+        "DD Amount": 1335241,
+        "INSURANCE": 70379,
+        "RTO": 176773,
+        "ACCESSORIES": 30200,
+        "FASTAG": 600,
+        "EW": 30916,
+        "CCP": 8284
+    },
+    {
+        "Index": 64312,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE ZXI+ 1.2L ISS AGS",
+        "Basic Price": 758345,
+        "Ex-showroom Price": 894847,
+        "DD Amount": 830387,
+        "INSURANCE": 31482,
+        "RTO": 86583,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 17039,
+        "CCP": 4826
+    },
+    {
+        "Index": 64314,
+        "MODEL": "Dzire",
+        "Variant Name": "DZIRE ZXI 1.2L ISS AGS",
+        "Basic Price": 698476,
+        "Ex-showroom Price": 824201,
+        "DD Amount": 764831,
+        "INSURANCE": 30283,
+        "RTO": 80409,
+        "ACCESSORIES": 23314,
+        "FASTAG": 600,
+        "EW": 15788,
+        "CCP": 4472
+    }
+];
+
+        let selectedVariant = null;
+
+        /**
+         * Formats a number as an Indian Rupee string.
+         * @param {number} num
+         * @returns {string}
+         */
+        function formatRupee(num) {
+            if (num === null || isNaN(num)) return 'N/A';
+            return '₹ ' + Math.round(num).toLocaleString('en-IN');
+        }
+
+        /**
+         * Populates the Model dropdown with unique models.
+         */
+        function populateModelDropdown() {
+            const models = [...new Set(priceData.map(item => item.MODEL))];
+            const modelSelect = document.getElementById('modelSelect');
+            modelSelect.innerHTML = '<option value="">Select a Model</option>';
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+            // Auto-select the first model and populate variants if data exists
+            if (models.length > 0) {
+                modelSelect.selectedIndex = 1;
+                populateVariants();
+            }
+        }
+
+        /**
+         * Populates the Variant dropdown based on the selected Model.
+         * The format is: "Variant Name - Index No."
+         */
+        function populateVariants() {
+            const modelSelect = document.getElementById('modelSelect');
+            const variantSelect = document.getElementById('variantSelect');
+            const selectedModel = modelSelect.value;
+            
+            variantSelect.innerHTML = '<option value="">Select a Variant</option>';
+            document.getElementById('readOnlyDetails').innerHTML = '<p>Select a Model and Variant to see details.</p>';
+            document.getElementById('chargesBreakdown').innerHTML = '';
+            document.getElementById('finalOnRoadPrice').textContent = 'Now OnRoad final. : ₹ 0';
+
+            if (!selectedModel) return;
+
+            const variants = priceData.filter(item => item.MODEL === selectedModel);
+            
+            variants.forEach(variant => {
+                const option = document.createElement('option');
+                // Format: "variant name - index no."
+                option.textContent = `${variant['Variant Name']} - ${variant.Index}`; 
+                option.value = variant.Index;
+                variantSelect.appendChild(option);
+            });
+
+            // Auto-select the first variant and display breakdown if data exists
+            if (variants.length > 0) {
+                variantSelect.selectedIndex = 1;
+                displayBreakdown();
+            }
+        }
+
+        /**
+         * Displays the read-only details and populates the interactive breakdown.
+         */
+        function displayBreakdown() {
+            const variantSelect = document.getElementById('variantSelect');
+            const selectedIndex = parseInt(variantSelect.value);
+            
+            selectedVariant = priceData.find(item => item.Index === selectedIndex);
+
+            const detailsDiv = document.getElementById('readOnlyDetails');
+            const breakdownDiv = document.getElementById('chargesBreakdown');
+            breakdownDiv.innerHTML = '';
+            
+            if (!selectedVariant) {
+                detailsDiv.innerHTML = '<p>Select a Model and Variant to see details.</p>';
+                document.getElementById('finalOnRoadPrice').textContent = 'Now OnRoad final. : ₹ 0';
+                return;
+            }
+
+            // --- 1. Populate Read-Only Details ---
+            detailsDiv.innerHTML = `
+                <div class="detail-row"><span>Index no.</span><span>${selectedVariant.Index}</span></div>
+                <div class="detail-row"><span>Variant name</span><span>${selectedVariant['Variant Name']}</span></div>
+                <div class="detail-row"><span>Basic Price</span><span>${formatRupee(selectedVariant['Basic Price'])}</span></div>
+                <div class="detail-row"><span>Csd exshowroom</span><span>${formatRupee(selectedVariant['Ex-showroom Price'])}</span></div>
+            `;
+
+            // --- 2. Populate Interactive Breakdown ---
+
+            // DD Amount (Read-only Input)
+            breakdownDiv.innerHTML += `
+                <div class="editable-charge">
+                    <label for="ddAmount">DD Amount</label>
+                    <input type="number" id="ddAmount" value="${selectedVariant['DD Amount']}" readonly class="read-only-input">
+                </div>
+            `;
+
+            // Editable Input Fields
+            const editableFields = [
+                { id: 'insurance', label: 'insurance (approx)', value: selectedVariant.INSURANCE },
+                { id: 'rto', label: 'Rto', value: selectedVariant.RTO },
+                { id: 'accessories', label: 'Accessories', value: selectedVariant.ACCESSORIES }
+            ];
+
+            editableFields.forEach(field => {
+                breakdownDiv.innerHTML += `
+                    <div class="editable-charge">
+                        <label for="${field.id}">${field.label} - </label>
+                        <input type="number" id="${field.id}" value="${field.value}" min="0" oninput="calculateOnRoadPrice()">
+                    </div>
+                `;
+            });
+
+            // Checkbox Options with Visible Amounts
+            const checkboxFields = [
+                { id: 'ewCheckbox', label: 'Ew', value: selectedVariant.EW, key: 'EW' },
+                { id: 'ccpCheckbox', label: 'Ccp', value: selectedVariant.CCP, key: 'CCP' },
+                { id: 'fastagCheckbox', label: 'Fastag', value: selectedVariant.FASTAG, key: 'FASTAG' }
+            ];
+
+            checkboxFields.forEach(field => {
+                breakdownDiv.innerHTML += `
+                    <div class="checkbox-charge">
+                        <label for="${field.id}">${field.label} - </label>
+                        <div class="checkbox-group">
+                            <span style="font-weight: bold;">${formatRupee(field.value)}</span>
+                            <input type="checkbox" id="${field.id}" value="${field.value}" data-key="${field.key}" onchange="calculateOnRoadPrice()" checked>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Initial calculation
+            calculateOnRoadPrice();
+        }
+
+        /**
+         * Calculates the dynamic "Now OnRoad final." price based on the user's defined formula:
+         * DD Amount + Insurance + RTO + Accessories + EW (if ticked) + CCP (if ticked) + FASTAG (if ticked)
+         */
+        function calculateOnRoadPrice() {
+            if (!selectedVariant) return;
+
+            let total = 0; // Start at 0 as per user's explicit request
+
+            // 1. DD Amount (Read-only input)
+            const ddAmount = parseFloat(document.getElementById('ddAmount').value) || 0;
+            total += ddAmount;
+
+            // 2. Editable Input Values (INSURANCE, RTO, ACCESSORIES)
+            const insurance = parseFloat(document.getElementById('insurance').value) || 0;
+            const rto = parseFloat(document.getElementById('rto').value) || 0;
+            const accessories = parseFloat(document.getElementById('accessories').value) || 0;
+            
+            total += insurance + rto + accessories;
+
+            // 3. Checkbox Option Values (EW, CCP, FASTAG)
+            const optionalCharges = [
+                { checkboxId: 'ewCheckbox', dataKey: 'EW' },
+                { checkboxId: 'ccpCheckbox', dataKey: 'CCP' },
+                { checkboxId: 'fastagCheckbox', dataKey: 'FASTAG' }
+            ];
+
+            optionalCharges.forEach(item => {
+                const checkbox = document.getElementById(item.checkboxId);
+                if (checkbox && checkbox.checked) {
+                    // Use the original value from the selectedVariant object
+                    const value = selectedVariant[item.dataKey];
+                    total += value;
+                }
+            });
+
+            // Update the final display
+            document.getElementById('finalOnRoadPrice').textContent = `Now OnRoad final. : ${formatRupee(total)}`;
+        }
+
+        /**
+         * Function to generate an image of the quotation and trigger the share action.
+         */
+        function generateAndShareImage() {
+            const quotationElement = document.getElementById('quotationContent');
+            
+            if (!selectedVariant) {
+                alert("Please select a Model and Variant first.");
+                return;
+            }
+
+            // Temporarily hide the dropdowns and the share container for a cleaner screenshot
+            const modelSelect = document.getElementById('modelSelect');
+            const variantSelect = document.getElementById('variantSelect');
+            const shareContainer = document.querySelector('.share-container');
+
+            modelSelect.style.display = 'none';
+            variantSelect.style.display = 'none';
+            shareContainer.style.display = 'none';
+            document.querySelector('label[for="modelSelect"]').style.display = 'none';
+            document.querySelector('label[for="variantSelect"]').style.display = 'none';
+            
+            // Generate the image using html2canvas
+            html2canvas(quotationElement, { 
+                scale: 2, // Improve image quality
+                useCORS: true 
+            }).then(canvas => {
+                // Restore the hidden elements
+                modelSelect.style.display = 'block';
+                variantSelect.style.display = 'block';
+                shareContainer.style.display = 'block';
+                document.querySelector('label[for="modelSelect"]').style.display = 'block';
+                document.querySelector('label[for="variantSelect"]').style.display = 'block';
+
+                // Get the image data
+                const imgData = canvas.toDataURL('image/png');
+
+                // Try to use the Web Share API (native sharing)
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([imgData], 'quotation.png', { type: 'image/png' })] })) {
+                    // Convert data URL to Blob for native sharing
+                    fetch(imgData)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const file = new File([blob], 'CSD_Quotation.png', { type: 'image/png' });
+                            navigator.share({
+                                files: [file],
+                                title: 'CSD Price Quotation',
+                                text: `Check out the On-Road Price for ${selectedVariant.MODEL} - ${selectedVariant['Variant Name']}.`
+                            }).catch(error => {
+                                console.error('Error sharing natively:', error);
+                                fallbackDownload(imgData); // Fallback if sharing fails or is cancelled
+                            });
+                        });
+                } else {
+                    // Fallback: Download the image
+                    fallbackDownload(imgData);
+                }
+            }).catch(error => {
+                // Restore elements if image generation fails
+                modelSelect.style.display = 'block';
+                variantSelect.style.display = 'block';
+                shareContainer.style.display = 'block';
+                document.querySelector('label[for="modelSelect"]').style.display = 'block';
+                document.querySelector('label[for="variantSelect"]').style.display = 'block';
+                alert('Could not generate quotation image: ' + error);
+            });
+        }
+
+        /**
+         * Fallback function to download the image.
+         * @param {string} dataUrl - The data URL of the image.
+         */
+        function fallbackDownload(dataUrl) {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `CSD_Quotation_${selectedVariant.MODEL.replace(/\s/g, '')}_${selectedVariant.Index}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            alert("Quotation image downloaded to your device.");
+        }
+
+        // Initialize the model dropdown on page load
+        document.addEventListener('DOMContentLoaded', populateModelDropdown);
+    </script>
+</body>
+</html>

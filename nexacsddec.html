@@ -1,0 +1,504 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXA CSD Price</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-top: 20px;
+            color: #555;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        select, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #readOnlyDetails, #chargesBreakdown {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-row span:first-child {
+            font-weight: 500;
+        }
+        .editable-charge {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        .editable-charge label {
+            flex-basis: 50%;
+            margin-top: 0;
+            font-weight: normal;
+        }
+        .editable-charge input {
+            flex-basis: 45%;
+            margin-top: 0;
+            margin-bottom: 0;
+            text-align: right;
+        }
+        .checkbox-charge {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        .checkbox-charge label {
+            margin: 0;
+            font-weight: normal;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-group span {
+            min-width: 100px; /* Ensure space for the amount */
+            text-align: right;
+            margin-right: 15px;
+            font-size: 0.9em;
+        }
+        .final-total {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e0f7fa;
+            border: 2px solid #00bcd4;
+            border-radius: 4px;
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: right;
+            color: #00bcd4;
+        }
+        .read-only-input {
+            background-color: #eee;
+        }
+        /* New styles for the Share button */
+        .share-container {
+            margin-top: 20px;
+            text-align: center; /* Center the button */
+        }
+        .share-button {
+            padding: 10px 20px;
+            background-color: #4CAF50; /* Green color for action */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+        }
+        .share-button:hover {
+            background-color: #45a049;
+        }
+        /* Hidden temporary element for canvas creation */
+        #quotationCanvas {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
+    </style>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <div class="container" id="quotationContent">
+        <h1>NEXA CSD Price - Dec 25</h1>
+
+        <label for="modelSelect">Select Model -</label>
+        <select id="modelSelect" onchange="populateVariants()"></select>
+
+        <label for="variantSelect">Select Variant -</label>
+        <select id="variantSelect" onchange="displayBreakdown()"></select>
+
+        <h2>Basic Details</h2>
+        <div id="readOnlyDetails">
+            <p>Select a Model and Variant to see details.</p>
+        </div>
+
+        <h2>On Road Charges Breakdown</h2>
+        <div id="chargesBreakdown">
+            </div>
+        
+        <div id="finalOnRoadPrice" class="final-total">
+            Now OnRoad final. : ₹ 0
+        </div>
+    </div>
+    
+    <div class="container share-container">
+        <button class="share-button" onclick="generateAndShareImage()">
+            📸 Generate & Share Quotation
+        </button>
+    </div>
+
+    <script>
+        // Data generated from the NEXA CSD PRICE DEC.csv file
+        // Model names have been normalized to Uppercase to prevent duplicates in dropdown
+        const priceData = [
+            {"Index":64295,"MODEL":"BALENO","Variant Name":"BALENO ALPHA 1.2L ISS 5MT","Basic Price":684183,"Ex-showroom Price":807335,"DD Amount":749180,"INSURANCE":36985,"RTO":80327,"ACCESSORIES":18925,"FASTAG":600,"EW":15729,"CCP":5947},
+            {"Index":64347,"MODEL":"BALENO","Variant Name":"BALENO ALPHA 1.2L ISS AGS","Basic Price":723542,"Ex-showroom Price":853780,"DD Amount":792279,"INSURANCE":38062,"RTO":84827,"ACCESSORIES":18925,"FASTAG":600,"EW":16650,"CCP":6289},
+            {"Index":64311,"MODEL":"BALENO","Variant Name":"BALENO DELTA 1.2L ISS 5MT","Basic Price":535694,"Ex-showroom Price":632118,"DD Amount":586584,"INSURANCE":33029,"RTO":64127,"ACCESSORIES":18953,"FASTAG":600,"EW":12437,"CCP":4696},
+            {"Index":64310,"MODEL":"BALENO","Variant Name":"BALENO DELTA 1.2L ISS AGS","Basic Price":577218,"Ex-showroom Price":681118,"DD Amount":632054,"INSURANCE":34134,"RTO":68627,"ACCESSORIES":18953,"FASTAG":600,"EW":13358,"CCP":5039},
+            {"Index":67595,"MODEL":"BALENO","Variant Name":"BALENO DELTA CNG 1.2L 5MT","Basic Price":621754,"Ex-showroom Price":733669,"DD Amount":680820,"INSURANCE":35868,"RTO":72227,"ACCESSORIES":18952,"FASTAG":600,"EW":14089,"CCP":5322},
+            {"Index":64313,"MODEL":"BALENO","Variant Name":"BALENO SIGMA 1.2L ISS 5MT","Basic Price":472815,"Ex-showroom Price":557921,"DD Amount":517732,"INSURANCE":31256,"RTO":56837,"ACCESSORIES":18953,"FASTAG":600,"EW":10962,"CCP":4142},
+            {"Index":64315,"MODEL":"BALENO","Variant Name":"BALENO ZETA 1.2L ISS 5MT","Basic Price":609892,"Ex-showroom Price":719672,"DD Amount":667831,"INSURANCE":34998,"RTO":72227,"ACCESSORIES":18941,"FASTAG":600,"EW":14089,"CCP":5322},
+            {"Index":64358,"MODEL":"BALENO","Variant Name":"BALENO ZETA 1.2L ISS AGS","Basic Price":652376,"Ex-showroom Price":769804,"DD Amount":714352,"INSURANCE":36075,"RTO":76727,"ACCESSORIES":18941,"FASTAG":600,"EW":14998,"CCP":5664},
+            {"Index":67596,"MODEL":"BALENO","Variant Name":"BALENO ZETA CNG 1.2L 5MT","Basic Price":696996,"Ex-showroom Price":822455,"DD Amount":763210,"INSURANCE":37837,"RTO":80327,"ACCESSORIES":18941,"FASTAG":600,"EW":15729,"CCP":5947},
+            {"Index":64317,"MODEL":"FRONX","Variant Name":"FRONX DELTA CNG 1.2L 5MT ESP","Basic Price":716255,"Ex-showroom Price":845181,"DD Amount":784299,"INSURANCE":34693,"RTO":80237,"ACCESSORIES":19934,"FASTAG":600,"EW":15718,"CCP":5935},
+            {"Index":67608,"MODEL":"FRONX","Variant Name":"FRONX ISS DELTA 1.2L 5MT ESP","Basic Price":638760,"Ex-showroom Price":753737,"DD Amount":699442,"INSURANCE":33563,"RTO":71777,"ACCESSORIES":19934,"FASTAG":600,"EW":13995,"CCP":5286},
+            {"Index":67598,"MODEL":"FRONX","Variant Name":"FRONX ISS DELTA+ 1.2L 5MT ESP","Basic Price":671866,"Ex-showroom Price":792802,"DD Amount":735693,"INSURANCE":34039,"RTO":75341,"ACCESSORIES":19934,"FASTAG":600,"EW":14715,"CCP":5558},
+            {"Index":67618,"MODEL":"FRONX","Variant Name":"FRONX ISS DELTA+ 1.2L AGS ESP","Basic Price":713667,"Ex-showroom Price":842127,"DD Amount":781465,"INSURANCE":34640,"RTO":79841,"ACCESSORIES":19934,"FASTAG":600,"EW":15635,"CCP":5900},
+            {"Index":67625,"MODEL":"FRONX","Variant Name":"FRONX ISS SIGMA 1.2L 5MT ESP","Basic Price":571878,"Ex-showroom Price":674816,"DD Amount":626206,"INSURANCE":32601,"RTO":64577,"ACCESSORIES":19934,"FASTAG":600,"EW":12532,"CCP":4732},
+            {"Index":64336,"MODEL":"FRONX","Variant Name":"FRONX SIGMA CNG 1.2L 5MT ESP","Basic Price":648816,"Ex-showroom Price":765603,"DD Amount":710454,"INSURANCE":33731,"RTO":73037,"ACCESSORIES":19934,"FASTAG":600,"EW":14254,"CCP":5381},
+            {"Index":67622,"MODEL":"FRONX","Variant Name":"FRONX TURBO SMART HYBRID ALPHA 1.0L 5MT ESP","Basic Price":873566,"Ex-showroom Price":1030808,"DD Amount":956555,"INSURANCE":37061,"RTO":119080,"ACCESSORIES":19856,"FASTAG":600,"EW":19576,"CCP":7387},
+            {"Index":67609,"MODEL":"FRONX","Variant Name":"FRONX TURBO SMART HYBRID ALPHA 1.0L 6AT ESP","Basic Price":980577,"Ex-showroom Price":1157081,"DD Amount":1084469,"INSURANCE":38600,"RTO":133164,"ACCESSORIES":19856,"FASTAG":600,"EW":21913,"CCP":8522},
+            {"Index":67607,"MODEL":"FRONX","Variant Name":"FRONX TURBO SMART HYBRID DELTA+ 1.0L 5MT ESP","Basic Price":736459,"Ex-showroom Price":869022,"DD Amount":806423,"INSURANCE":35089,"RTO":83207,"ACCESSORIES":19934,"FASTAG":600,"EW":16319,"CCP":6136},
+            {"Index":67617,"MODEL":"FRONX","Variant Name":"FRONX TURBO SMART HYBRID ZETA 1.0L 5MT ESP","Basic Price":797420,"Ex-showroom Price":940956,"DD Amount":873175,"INSURANCE":36039,"RTO":90317,"ACCESSORIES":19856,"FASTAG":600,"EW":17759,"CCP":6702},
+            {"Index":67619,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA DELTA CNG 1.5L 5MT","Basic Price":900956,"Ex-showroom Price":1261339,"DD Amount":1096509,"INSURANCE":44774,"RTO":145901,"ACCESSORIES":20061,"FASTAG":600,"EW":25158,"CCP":8980},
+            {"Index":64238,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID ALPHA 1.5L 5MT","Basic Price":1030734,"Ex-showroom Price":1443028,"DD Amount":1254455,"INSURANCE":49656,"RTO":170101,"ACCESSORIES":20057,"FASTAG":600,"EW":29712,"CCP":10608},
+            {"Index":67601,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID ALPHA 1.5L 5MT- DUAL TONE","Basic Price":1052543,"Ex-showroom Price":1473560,"DD Amount":1280997,"INSURANCE":49975,"RTO":171795,"ACCESSORIES":20057,"FASTAG":600,"EW":31907,"CCP":11058},
+            {"Index":64065,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID ALPHA 1.5L 6AT","Basic Price":1133511,"Ex-showroom Price":1586915,"DD Amount":1379540,"INSURANCE":52456,"RTO":184951,"ACCESSORIES":20057,"FASTAG":600,"EW":32320,"CCP":11540},
+            {"Index":67600,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID ALPHA 1.5L 6AT- DUAL TONE","Basic Price":1147670,"Ex-showroom Price":1606738,"DD Amount":1396772,"INSURANCE":52776,"RTO":186645,"ACCESSORIES":20057,"FASTAG":600,"EW":34727,"CCP":11990},
+            {"Index":67615,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID DELTA 1.5L 5MT","Basic Price":798052,"Ex-showroom Price":1117273,"DD Amount":961653,"INSURANCE":42894,"RTO":136001,"ACCESSORIES":20102,"FASTAG":600,"EW":23411,"CCP":8354},
+            {"Index":67611,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID DELTA 1.5L 6AT","Basic Price":918379,"Ex-showroom Price":1285731,"DD Amount":1117713,"INSURANCE":45694,"RTO":150851,"ACCESSORIES":20057,"FASTAG":600,"EW":26031,"CCP":9287},
+            {"Index":64077,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID SIGMA 1.5L 5MT","Basic Price":729428,"Ex-showroom Price":1021199,"DD Amount":878961,"INSURANCE":40359,"RTO":121349,"ACCESSORIES":20102,"FASTAG":600,"EW":20839,"CCP":7434},
+            {"Index":64223,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID ZETA 1.5L 5MT","Basic Price":923395,"Ex-showroom Price":1292753,"DD Amount":1123818,"INSURANCE":46620,"RTO":153634,"ACCESSORIES":20057,"FASTAG":600,"EW":26821,"CCP":9570},
+            {"Index":67612,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA SMART HYBRID ZETA 1.5L 6AT","Basic Price":1031334,"Ex-showroom Price":1443868,"DD Amount":1255185,"INSURANCE":49420,"RTO":168484,"ACCESSORIES":20057,"FASTAG":600,"EW":29429,"CCP":10502},
+            {"Index":64320,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA STRONG HYBRID ALPHA+ 1.5L CVT","Basic Price":1322442,"Ex-showroom Price":1851418,"DD Amount":1609478,"INSURANCE":58010,"RTO":217456,"ACCESSORIES":20107,"FASTAG":600,"EW":38043,"CCP":13570},
+            {"Index":67603,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA STRONG HYBRID ALPHA+ 1.5L CVT- DUAL TONE","Basic Price":1348749,"Ex-showroom Price":1888248,"DD Amount":1641495,"INSURANCE":58329,"RTO":219150,"ACCESSORIES":20107,"FASTAG":600,"EW":39341,"CCP":18070},
+            {"Index":64297,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA STRONG HYBRID ZETA+ 1.5L CVT","Basic Price":1209257,"Ex-showroom Price":1692959,"DD Amount":1471726,"INSURANCE":54993,"RTO":200010,"ACCESSORIES":20107,"FASTAG":600,"EW":34975,"CCP":12484},
+            {"Index":67604,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA STRONG HYBRID ZETA+ 1.5L CVT- DUAL TONE","Basic Price":1236993,"Ex-showroom Price":1731790,"DD Amount":1505482,"INSURANCE":55313,"RTO":201704,"ACCESSORIES":20107,"FASTAG":600,"EW":36663,"CCP":12934},
+            {"Index":67620,"MODEL":"GRAND VITARA","Variant Name":"GRAND VITARA ZETA CNG 1.5L 5MT","Basic Price":1013910,"Ex-showroom Price":1419474,"DD Amount":1233980,"INSURANCE":48501,"RTO":163534,"ACCESSORIES":20061,"FASTAG":600,"EW":28556,"CCP":10195},
+            {"Index":64344,"MODEL":"IGNIS","Variant Name":"IGNIS ALPHA 1.2L 5MT","Basic Price":551809,"Ex-showroom Price":651134,"DD Amount":604230,"INSURANCE":32257,"RTO":65666,"ACCESSORIES":18968,"FASTAG":600,"EW":12992,"CCP":4909},
+            {"Index":65206,"MODEL":"IGNIS","Variant Name":"IGNIS ALPHA 1.2L 5MT- DUAL TONE","Basic Price":562560,"Ex-showroom Price":663820,"DD Amount":616003,"INSURANCE":26003,"RTO":66809,"ACCESSORIES":18968,"FASTAG":600,"EW":13051,"CCP":4944},
+            {"Index":65209,"MODEL":"IGNIS","Variant Name":"IGNIS ALPHA 1.2L AGS","Basic Price":585735,"Ex-showroom Price":691168,"DD Amount":641380,"INSURANCE":33274,"RTO":69716,"ACCESSORIES":18968,"FASTAG":600,"EW":13806,"CCP":5216},
+            {"Index":65203,"MODEL":"IGNIS","Variant Name":"IGNIS DELTA 1.2L 5MT","Basic Price":458533,"Ex-showroom Price":541068,"DD Amount":502093,"INSURANCE":29732,"RTO":55541,"ACCESSORIES":18947,"FASTAG":600,"EW":10691,"CCP":4036},
+            {"Index":65207,"MODEL":"IGNIS","Variant Name":"IGNIS DELTA 1.2L AGS","Basic Price":491647,"Ex-showroom Price":580144,"DD Amount":538354,"INSURANCE":30750,"RTO":59591,"ACCESSORIES":18975,"FASTAG":600,"EW":11517,"CCP":4354},
+            {"Index":65202,"MODEL":"IGNIS","Variant Name":"IGNIS SIGMA 1.2L 5MT","Basic Price":420789,"Ex-showroom Price":496531,"DD Amount":460763,"INSURANCE":28613,"RTO":51095,"ACCESSORIES":18961,"FASTAG":600,"EW":9794,"CCP":3705},
+            {"Index":65204,"MODEL":"IGNIS","Variant Name":"IGNIS ZETA 1.2L 5MT","Basic Price":502734,"Ex-showroom Price":593226,"DD Amount":550493,"INSURANCE":30908,"RTO":60284,"ACCESSORIES":18947,"FASTAG":600,"EW":11894,"CCP":4496},
+            {"Index":65205,"MODEL":"IGNIS","Variant Name":"IGNIS ZETA 1.2L 5MT- DUAL TONE","Basic Price":513514,"Ex-showroom Price":605946,"DD Amount":562297,"INSURANCE":25204,"RTO":61454,"ACCESSORIES":18947,"FASTAG":600,"EW":11953,"CCP":4531},
+            {"Index":64345,"MODEL":"IGNIS","Variant Name":"IGNIS ZETA 1.2L AGS","Basic Price":535812,"Ex-showroom Price":632258,"DD Amount":586714,"INSURANCE":31928,"RTO":64361,"ACCESSORIES":18947,"FASTAG":600,"EW":12720,"CCP":4803},
+            {"Index":65208,"MODEL":"IGNIS","Variant Name":"IGNIS ZETA 1.2L AGS- DUAL TONE","Basic Price":546619,"Ex-showroom Price":645011,"DD Amount":598548,"INSURANCE":25801,"RTO":65504,"ACCESSORIES":18947,"FASTAG":600,"EW":12779,"CCP":4838},
+            {"Index":64300,"MODEL":"INVICTO","Variant Name":"INVICTO STRONG HYBRID ZETA+ 2.0L CVT 7 STR","Basic Price":1756517,"Ex-showroom Price":2459124,"DD Amount":2137769,"INSURANCE":89561,"RTO":278677,"ACCESSORIES":25779,"FASTAG":600,"EW":48510,"CCP":17311},
+            {"Index":64722,"MODEL":"JIMNY","Variant Name":"JIMNY ISS ALPHA ALLGRIP PRO 1.5L 4AT","Basic Price":971535,"Ex-showroom Price":1360149,"DD Amount":1182407,"INSURANCE":49494,"RTO":160146,"ACCESSORIES":19764,"FASTAG":600,"EW":27966,"CCP":9983},
+            {"Index":65273,"MODEL":"XL6","Variant Name":"XL6 SMART HYBRID ALPHA 1.5L 5MT","Basic Price":868500,"Ex-showroom Price":1215900,"DD Amount":1057008,"INSURANCE":41134,"RTO":140302,"ACCESSORIES":20077,"FASTAG":600,"EW":24178,"CCP":8626},
+            {"Index":65271,"MODEL":"XL6","Variant Name":"XL6 SMART HYBRID ALPHA 1.5L 6AT","Basic Price":962873,"Ex-showroom Price":1348022,"DD Amount":1171865,"INSURANCE":40256,"RTO":155152,"ACCESSORIES":20077,"FASTAG":600,"EW":26786,"CCP":9558},
+            {"Index":64061,"MODEL":"XL6","Variant Name":"XL6 SMART HYBRID ALPHA+ 1.5L 5MT","Basic Price":903049,"Ex-showroom Price":1264269,"DD Amount":1099056,"INSURANCE":43075,"RTO":145615,"ACCESSORIES":20077,"FASTAG":600,"EW":25405,"CCP":8992},
+            {"Index":67606,"MODEL":"XL6","Variant Name":"XL6 SMART HYBRID ALPHA+ 1.5L 5MT- DUAL TONE","Basic Price":923990,"Ex-showroom Price":1293586,"DD Amount":1124542,"INSURANCE":45062,"RTO":147309,"ACCESSORIES":20077,"FASTAG":600,"EW":25755,"CCP":9062},
+            {"Index":64307,"MODEL":"XL6","Variant Name":"XL6 SMART HYBRID ALPHA+ 1.5L 6AT","Basic Price":999373,"Ex-showroom Price":1399122,"DD Amount":1216287,"INSURANCE":42029,"RTO":160465,"ACCESSORIES":20077,"FASTAG":600,"EW":28013,"CCP":10360},
+            {"Index":67605,"MODEL":"XL6","Variant Name":"XL6 SMART HYBRID ALPHA+ 1.5L 6AT- DUAL TONE","Basic Price":1019116,"Ex-showroom Price":1426762,"DD Amount":1240315,"INSURANCE":41998,"RTO":162159,"ACCESSORIES":20077,"FASTAG":600,"EW":28463,"CCP":9995},
+            {"Index":65272,"MODEL":"XL6","Variant Name":"XL6 SMART HYBRID ZETA 1.5L 5MT","Basic Price":796953,"Ex-showroom Price":1115734,"DD Amount":960328,"INSURANCE":41985,"RTO":129687,"ACCESSORIES":20068,"FASTAG":600,"EW":22302,"CCP":7965},
+            {"Index":65270,"MODEL":"XL6","Variant Name":"XL6 SMART HYBRID ZETA 1.5L 6AT","Basic Price":895577,"Ex-showroom Price":1253808,"DD Amount":1089962,"INSURANCE":43868,"RTO":144537,"ACCESSORIES":20058,"FASTAG":600,"EW":24922,"CCP":8897},
+            {"Index":67626,"MODEL":"XL6","Variant Name":"XL6 ZETA CNG 1.5L 5MT","Basic Price":875228,"Ex-showroom Price":1225319,"DD Amount":1065196,"INSURANCE":45837,"RTO":139697,"ACCESSORIES":20068,"FASTAG":600,"EW":24072,"CCP":8590}
+        ];
+
+        let selectedVariant = null;
+
+        /**
+         * Formats a number as an Indian Rupee string.
+         * @param {number} num
+         * @returns {string}
+         */
+        function formatRupee(num) {
+            if (num === null || isNaN(num)) return 'N/A';
+            return '₹ ' + Math.round(num).toLocaleString('en-IN');
+        }
+
+        /**
+         * Populates the Model dropdown with unique models.
+         */
+        function populateModelDropdown() {
+            const models = [...new Set(priceData.map(item => item.MODEL))];
+            const modelSelect = document.getElementById('modelSelect');
+            modelSelect.innerHTML = '<option value="">Select a Model</option>';
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+            // Auto-select the first model and populate variants if data exists
+            if (models.length > 0) {
+                modelSelect.selectedIndex = 1;
+                populateVariants();
+            }
+        }
+
+        /**
+         * Populates the Variant dropdown based on the selected Model.
+         * The format is: "Variant Name - Index No."
+         */
+        function populateVariants() {
+            const modelSelect = document.getElementById('modelSelect');
+            const variantSelect = document.getElementById('variantSelect');
+            const selectedModel = modelSelect.value;
+            
+            variantSelect.innerHTML = '<option value="">Select a Variant</option>';
+            document.getElementById('readOnlyDetails').innerHTML = '<p>Select a Model and Variant to see details.</p>';
+            document.getElementById('chargesBreakdown').innerHTML = '';
+            document.getElementById('finalOnRoadPrice').textContent = 'Now OnRoad final. : ₹ 0';
+
+            if (!selectedModel) return;
+
+            const variants = priceData.filter(item => item.MODEL === selectedModel);
+            
+            variants.forEach(variant => {
+                const option = document.createElement('option');
+                // Format: "variant name - index no."
+                option.textContent = `${variant['Variant Name']} - ${variant.Index}`; 
+                option.value = variant.Index;
+                variantSelect.appendChild(option);
+            });
+
+            // Auto-select the first variant and display breakdown if data exists
+            if (variants.length > 0) {
+                variantSelect.selectedIndex = 1;
+                displayBreakdown();
+            }
+        }
+
+        /**
+         * Displays the read-only details and populates the interactive breakdown.
+         */
+        function displayBreakdown() {
+            const variantSelect = document.getElementById('variantSelect');
+            const selectedIndex = parseInt(variantSelect.value);
+            
+            selectedVariant = priceData.find(item => item.Index === selectedIndex);
+
+            const detailsDiv = document.getElementById('readOnlyDetails');
+            const breakdownDiv = document.getElementById('chargesBreakdown');
+            breakdownDiv.innerHTML = '';
+            
+            if (!selectedVariant) {
+                detailsDiv.innerHTML = '<p>Select a Model and Variant to see details.</p>';
+                document.getElementById('finalOnRoadPrice').textContent = 'Now OnRoad final. : ₹ 0';
+                return;
+            }
+
+            // --- 1. Populate Read-Only Details ---
+            detailsDiv.innerHTML = `
+                <div class="detail-row"><span>Index no.</span><span>${selectedVariant.Index}</span></div>
+                <div class="detail-row"><span>Variant name</span><span>${selectedVariant['Variant Name']}</span></div>
+                <div class="detail-row"><span>Basic Price</span><span>${formatRupee(selectedVariant['Basic Price'])}</span></div>
+                <div class="detail-row"><span>Csd exshowroom</span><span>${formatRupee(selectedVariant['Ex-showroom Price'])}</span></div>
+            `;
+
+            // --- 2. Populate Interactive Breakdown ---
+
+            // DD Amount (Read-only Input)
+            breakdownDiv.innerHTML += `
+                <div class="editable-charge">
+                    <label for="ddAmount">DD Amount</label>
+                    <input type="number" id="ddAmount" value="${selectedVariant['DD Amount']}" readonly class="read-only-input">
+                </div>
+            `;
+
+            // Editable Input Fields
+            const editableFields = [
+                { id: 'insurance', label: 'insurance (approx)', value: selectedVariant.INSURANCE },
+                { id: 'rto', label: 'Rto', value: selectedVariant.RTO },
+                { id: 'accessories', label: 'Accessories', value: selectedVariant.ACCESSORIES }
+            ];
+
+            editableFields.forEach(field => {
+                breakdownDiv.innerHTML += `
+                    <div class="editable-charge">
+                        <label for="${field.id}">${field.label} - </label>
+                        <input type="number" id="${field.id}" value="${field.value}" min="0" oninput="calculateOnRoadPrice()">
+                    </div>
+                `;
+            });
+
+            // Checkbox Options with Visible Amounts
+            const checkboxFields = [
+                { id: 'ewCheckbox', label: 'Ew', value: selectedVariant.EW, key: 'EW' },
+                { id: 'ccpCheckbox', label: 'Ccp', value: selectedVariant.CCP, key: 'CCP' },
+                { id: 'fastagCheckbox', label: 'Fastag', value: selectedVariant.FASTAG, key: 'FASTAG' }
+            ];
+
+            checkboxFields.forEach(field => {
+                breakdownDiv.innerHTML += `
+                    <div class="checkbox-charge">
+                        <label for="${field.id}">${field.label} - </label>
+                        <div class="checkbox-group">
+                            <span style="font-weight: bold;">${formatRupee(field.value)}</span>
+                            <input type="checkbox" id="${field.id}" value="${field.value}" data-key="${field.key}" onchange="calculateOnRoadPrice()" checked>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Initial calculation
+            calculateOnRoadPrice();
+        }
+
+        /**
+         * Calculates the dynamic "Now OnRoad final." price based on the user's defined formula:
+         * DD Amount + Insurance + RTO + Accessories + EW (if ticked) + CCP (if ticked) + FASTAG (if ticked)
+         */
+        function calculateOnRoadPrice() {
+            if (!selectedVariant) return;
+
+            let total = 0; // Start at 0 as per user's explicit request
+
+            // 1. DD Amount (Read-only input)
+            const ddAmount = parseFloat(document.getElementById('ddAmount').value) || 0;
+            total += ddAmount;
+
+            // 2. Editable Input Values (INSURANCE, RTO, ACCESSORIES)
+            const insurance = parseFloat(document.getElementById('insurance').value) || 0;
+            const rto = parseFloat(document.getElementById('rto').value) || 0;
+            const accessories = parseFloat(document.getElementById('accessories').value) || 0;
+            
+            total += insurance + rto + accessories;
+
+            // 3. Checkbox Option Values (EW, CCP, FASTAG)
+            const optionalCharges = [
+                { checkboxId: 'ewCheckbox', dataKey: 'EW' },
+                { checkboxId: 'ccpCheckbox', dataKey: 'CCP' },
+                { checkboxId: 'fastagCheckbox', dataKey: 'FASTAG' }
+            ];
+
+            optionalCharges.forEach(item => {
+                const checkbox = document.getElementById(item.checkboxId);
+                if (checkbox && checkbox.checked) {
+                    // Use the original value from the selectedVariant object
+                    const value = selectedVariant[item.dataKey];
+                    total += value;
+                }
+            });
+
+            // Update the final display
+            document.getElementById('finalOnRoadPrice').textContent = `Now OnRoad final. : ${formatRupee(total)}`;
+        }
+
+        /**
+         * Function to generate an image of the quotation and trigger the share action.
+         */
+        function generateAndShareImage() {
+            const quotationElement = document.getElementById('quotationContent');
+            
+            if (!selectedVariant) {
+                alert("Please select a Model and Variant first.");
+                return;
+            }
+
+            // Temporarily hide the dropdowns and the share container for a cleaner screenshot
+            const modelSelect = document.getElementById('modelSelect');
+            const variantSelect = document.getElementById('variantSelect');
+            const shareContainer = document.querySelector('.share-container');
+
+            modelSelect.style.display = 'none';
+            variantSelect.style.display = 'none';
+            shareContainer.style.display = 'none';
+            document.querySelector('label[for="modelSelect"]').style.display = 'none';
+            document.querySelector('label[for="variantSelect"]').style.display = 'none';
+            
+            // Generate the image using html2canvas
+            html2canvas(quotationElement, { 
+                scale: 2, // Improve image quality
+                useCORS: true 
+            }).then(canvas => {
+                // Restore the hidden elements
+                modelSelect.style.display = 'block';
+                variantSelect.style.display = 'block';
+                shareContainer.style.display = 'block';
+                document.querySelector('label[for="modelSelect"]').style.display = 'block';
+                document.querySelector('label[for="variantSelect"]').style.display = 'block';
+
+                // Get the image data
+                const imgData = canvas.toDataURL('image/png');
+
+                // Try to use the Web Share API (native sharing)
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([imgData], 'quotation.png', { type: 'image/png' })] })) {
+                    // Convert data URL to Blob for native sharing
+                    fetch(imgData)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const file = new File([blob], 'CSD_Quotation.png', { type: 'image/png' });
+                            navigator.share({
+                                files: [file],
+                                title: 'CSD Price Quotation',
+                                text: `Check out the On-Road Price for ${selectedVariant.MODEL} - ${selectedVariant['Variant Name']}.`
+                            }).catch(error => {
+                                console.error('Error sharing natively:', error);
+                                fallbackDownload(imgData); // Fallback if sharing fails or is cancelled
+                            });
+                        });
+                } else {
+                    // Fallback: Download the image
+                    fallbackDownload(imgData);
+                }
+            }).catch(error => {
+                // Restore elements if image generation fails
+                modelSelect.style.display = 'block';
+                variantSelect.style.display = 'block';
+                shareContainer.style.display = 'block';
+                document.querySelector('label[for="modelSelect"]').style.display = 'block';
+                document.querySelector('label[for="variantSelect"]').style.display = 'block';
+                alert('Could not generate quotation image: ' + error);
+            });
+        }
+
+        /**
+         * Fallback function to download the image.
+         * @param {string} dataUrl - The data URL of the image.
+         */
+        function fallbackDownload(dataUrl) {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `CSD_Quotation_${selectedVariant.MODEL.replace(/\s/g, '')}_${selectedVariant.Index}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            alert("Quotation image downloaded to your device.");
+        }
+
+        // Initialize the model dropdown on page load
+        document.addEventListener('DOMContentLoaded', populateModelDropdown);
+    </script>
+</body>
+</html>
